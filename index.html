@@ -88,16 +88,16 @@
         .shockwave.active { animation: shockwaveAnim 0.6s ease-out forwards; }
         @keyframes shockwaveAnim { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 1; border-width: 20px; } 100% { transform: translate(-50%, -50%) scale(2.5); opacity: 0; border-width: 1px; } }
 
-        /* CUNG ĐÀN */
-        .cungdan-container { display: none; width: 100%; height: 100%; flex-direction: column; align-items: center; justify-content: center; position: relative; }
-        .chord-lines { width: 100%; height: 150px; display: flex; flex-direction: column; justify-content: space-around; position: relative; z-index: 2; }
-        .chord { width: 100%; height: 2px; background: #fff; box-shadow: 0 0 10px #fff; transition: 0.1s; position: relative; }
-        .chord:nth-child(1) { background: var(--gold-mid); box-shadow: 0 0 15px var(--gold-mid); }
-        .chord:nth-child(2) { background: var(--uv-glow); box-shadow: 0 0 15px var(--uv-glow); }
-        .chord:nth-child(3) { background: var(--cyan-neon); box-shadow: 0 0 15px var(--cyan-neon); }
-        .chord.strummed { animation: strumAnim 0.3s ease-in-out; }
-        @keyframes strumAnim { 0%, 100% { transform: translateY(0); } 25% { transform: translateY(-10px); } 75% { transform: translateY(10px); } }
-        .crystal { position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; background: radial-gradient(circle, #fff, var(--cyan-neon)); clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); box-shadow: 0 0 20px var(--cyan-neon); z-index: 3; transition: top 1s linear, opacity 0.3s; opacity: 0; }
+        /* MA TRẬN LẬP PHƯƠNG (QUANTUM DICE) - VIP PRO EFFECTS */
+        .quantum-container { display: none; width: 100%; height: 200px; flex-direction: column; align-items: center; justify-content: center; position: relative; perspective: 1000px; }
+        .quantum-bg { position: absolute; width: 200px; height: 200px; background: radial-gradient(circle, var(--cyan-neon) 0%, transparent 70%); opacity: 0; border-radius: 50%; z-index: 1; transition: 0.5s; filter: blur(15px); }
+        .quantum-dice-wrap { display: flex; gap: 15px; z-index: 5; margin-bottom: 10px; }
+        .cyber-dice-vip { width: 55px; height: 55px; background: rgba(10,10,10,0.95); border: 2px solid var(--cyan-neon); box-shadow: 0 0 15px var(--cyan-neon), inset 0 0 10px var(--cyan-neon); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 28px; border-radius: 12px; text-shadow: 0 0 10px #fff; transition: 0.3s; }
+        .matrix-rolling .cyber-dice-vip { animation: matrixFlicker 0.1s infinite alternate; border-color: var(--gold-mid); box-shadow: 0 0 15px var(--gold-mid); color: var(--gold-mid); }
+        @keyframes matrixFlicker { 0% { transform: translateY(-3px) scale(1.05); } 100% { transform: translateY(3px) scale(0.95); } }
+        .supernova-flash { position: absolute; top:0; left:0; width:100%; height:100%; background: #fff; z-index: 999; opacity: 0; pointer-events: none; transition: 0.2s; }
+        .shake-hard { animation: heavyShakeArena 0.4s cubic-bezier(.36,.07,.19,.97) both; }
+        @keyframes heavyShakeArena { 10%, 90% { transform: translate3d(-2px, 0, 0); } 20%, 80% { transform: translate3d(4px, 0, 0); } 30%, 50%, 70% { transform: translate3d(-6px, 0, 0); } 40%, 60% { transform: translate3d(6px, 0, 0); } }
 
         /* SA BÀN */
         .saban-container { display: none; width: 280px; height: 280px; border: 2px solid #333; border-radius: 10px; background: repeating-linear-gradient(45deg, #111, #111 10px, #1a1a1a 10px, #1a1a1a 20px); position: relative; margin-top: 20px; box-shadow: inset 0 0 50px rgba(0,0,0,0.8); }
@@ -221,13 +221,13 @@
         <div class="category-title">TÁC CHIẾN CƠ BẢN</div>
         <div class="game-grid">
             <div class="game-card" onclick="openGame('taixiu')">
-                <div class="game-hot">XUNG ĐIỆN</div><div class="game-icon">⚡</div><div class="game-name">TÀI XỈU THẦN KINH</div>
+                 <div class="game-hot">XUNG ĐIỆN</div><div class="game-icon">⚡</div><div class="game-name">TÀI XỈU THẦN KINH</div>
             </div>
-            <div class="game-card" onclick="openGame('cungdan')">
-                <div class="game-icon">🪕</div><div class="game-name">CUNG ĐÀN THIÊN MỆNH</div>
+            <div class="game-card" onclick="openGame('quantumdice')">
+                <div class="game-icon">🧊</div><div class="game-name">MA TRẬN LẬP PHƯƠNG</div>
             </div>
             <div class="game-card" onclick="openGame('saban')">
-                <div class="game-icon">🗺️</div><div class="game-name">SA BÀN HUYẾT LỆNH</div>
+                 <div class="game-icon">🗺️</div><div class="game-name">SA BÀN HUYẾT LỆNH</div>
             </div>
             <div class="game-card" onclick="openGame('thanhquach')">
                 <div class="game-icon">🏰</div><div class="game-name">THÀNH QUÁCH BẤT TỬ</div>
@@ -242,7 +242,7 @@
             <div class="game-card" onclick="openGame('baucua')">
                 <div class="game-icon">🦀</div><div class="game-name">BẦU CUA</div>
             </div>
-            <div class="game-card" style="grid-column: span 2;" onclick="openGame('baccarat')">
+             <div class="game-card" style="grid-column: span 2;" onclick="openGame('baccarat')">
                 <div class="game-hot">x8 HÒA</div><div class="game-icon">🃏</div><div class="game-name">BACCARAT HOÀNG GIA</div>
             </div>
         </div>
@@ -251,13 +251,13 @@
         <div class="game-grid">
             <div class="game-card" onclick="openGame('chromeorb')">
                 <div class="game-hot">HOT</div><div class="game-icon">🔮</div><div class="game-name">THỦY NGÂN</div>
-            </div>
+             </div>
             <div class="game-card" onclick="openGame('crash')">
                 <div class="game-icon">🚀</div><div class="game-name">TÊN LỬA CRASH</div>
             </div>
             <div class="game-card" onclick="openGame('radar')">
                 <div class="game-icon">📡</div><div class="game-name">RADAR TỌA ĐỘ</div>
-            </div>
+             </div>
             <div class="game-card" style="grid-column: span 2;" onclick="openGame('singularity')">
                 <div class="game-icon">🌌</div><div class="game-name">LÕI HƯ KHÔNG</div>
             </div>
@@ -271,16 +271,17 @@
     </div>
 
     <div class="game-screen" id="game-screen">
-        <div class="game-header">
+         <div class="game-header">
             <button class="btn-back" onclick="closeGame()">&lt; LOBBY</button>
             <div style="font-weight: 900; color: var(--gold-mid);" id="game-title">TÊN GAME</div>
             <div style="font-family: 'Share Tech Mono'; color: #aaa; font-size: 12px;">#<span id="game-id">0000</span></div>
         </div>
         
         <div class="display-area" id="display-area">
+            <div class="supernova-flash" id="supernova-effect"></div>
             <div class="status-text" id="game-status">> SẴN SÀNG</div>
             <div id="sha-display" style="display: none; position: absolute; top: 30px; left: 50%; transform: translateX(-50%); text-align:center; z-index: 5;">
-                <span style="color:#aaa; font-size:10px;">Chuỗi SHA-256 Minh Bạch:</span><br>
+                 <span style="color:#aaa; font-size:10px;">Chuỗi SHA-256 Minh Bạch:</span><br>
                 <span class="sha-text" id="sha-hash"></span>
             </div>
             
@@ -295,26 +296,28 @@
                 <div class="cup" id="cup" style="transform: translate(-50%,0);"></div>
             </div>
 
-            <div class="cungdan-container" id="cungdan-container">
-                <div class="crystal" id="cd-crystal"></div>
-                <div class="chord-lines" id="cd-lines">
-                    <div class="chord"></div><div class="chord"></div><div class="chord"></div>
+            <div class="quantum-container" id="quantum-container">
+                <div class="quantum-bg" id="quantum-bg"></div>
+                <div class="quantum-dice-wrap" id="quantum-dice-wrap">
+                    <div class="cyber-dice-vip" id="qd1">?</div>
+                    <div class="cyber-dice-vip" id="qd2">?</div>
+                    <div class="cyber-dice-vip" id="qd3">?</div>
                 </div>
-                <div style="margin-top:20px; font-size:10px; color:#aaa; font-style:italic;">AI Hệ thống sẽ tự động bắt nhịp rung cảm thanh âm...</div>
+                <div id="quantum-total" style="font-family: 'Share Tech Mono'; font-size: 24px; color: var(--gold-mid); font-weight: bold; opacity:0; z-index:5;">0 ĐIỂM</div>
             </div>
 
             <div class="saban-container" id="saban-container">
                 <div class="map-center" id="sb-center">CỨ ĐIỂM</div>
                 <div class="troop-line troop-n" id="tr-n"></div>
                 <div class="troop-line troop-s" id="tr-s"></div>
-                <div class="troop-line troop-e" id="tr-e"></div>
+                 <div class="troop-line troop-e" id="tr-e"></div>
                 <div class="troop-line troop-w" id="tr-w"></div>
                 <div class="map-explosion" id="sb-explosion"></div>
             </div>
 
             <div class="thanhquach-container" id="thanhquach-container">
                 <div class="digital-storm" id="tq-storm"></div>
-                <div class="tower" id="tq-1">THÁP 1</div>
+                 <div class="tower" id="tq-1">THÁP 1</div>
                 <div class="tower" id="tq-2">THÁP 2</div>
                 <div class="tower" id="tq-3">THÁP 3</div>
             </div>
@@ -337,13 +340,13 @@
                 <div class="sing-core" id="sing-core">CORE</div>
             </div>
 
-            <div class="orb-text-container" id="orb-text-container">
+             <div class="orb-text-container" id="orb-text-container">
                 <div class="orb-result-text" id="orb-txt-1"></div>
                 <div class="orb-result-text" id="orb-txt-2"></div>
                 <div class="orb-result-text" id="orb-txt-3"></div>
             </div>
             <div class="gooey-wrapper" id="gooey-wrapper" style="display:none;">
-                <div class="chromeorb-container" id="chromeorb-container">
+                 <div class="chromeorb-container" id="chromeorb-container">
                     <div class="orb orb-main" id="orb-main"></div>
                     <div class="orb orb-1" id="orb-1"></div>
                     <div class="orb orb-2" id="orb-2"></div>
@@ -373,6 +376,7 @@
 <script>
     const canvas = document.getElementById('matrix-canvas');
     const ctx = canvas.getContext('2d');
+
     const appWrapper = document.querySelector('.app-wrapper');
     function resizeCanvas() { canvas.width = appWrapper.clientWidth; canvas.height = appWrapper.clientHeight; }
     resizeCanvas(); window.addEventListener('resize', resizeCanvas);
@@ -382,7 +386,7 @@
         particles.push({ x: Math.random() * canvas.width, y: Math.random() * canvas.height, r: Math.random() * 2 + 1, dx: (Math.random() - 0.5) * 1, dy: -Math.random() * 2 - 1, color: `rgba(255, ${Math.floor(Math.random()*150 + 50)}, 0, ${Math.random()*0.8 + 0.2})` });
     }
     function drawEmbers() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+         ctx.clearRect(0, 0, canvas.width, canvas.height);
         particles.forEach(p => { ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI*2); ctx.fillStyle = p.color; ctx.fill(); p.x += p.dx; p.y += p.dy; if(p.y < 0) { p.y = canvas.height; p.x = Math.random() * canvas.width; } });
     }
     setInterval(drawEmbers, 30);
@@ -400,7 +404,8 @@
             if(result.isConfirmed) {
                 let id = document.getElementById('cl-id').value;
                 let amt = parseInt(document.getElementById('cl-amt').value);
-                if(!id || id.length < 4) return Swal.fire({title:'Lỗi', text:'ID không hợp lệ', icon:'error', background: '#1a0000', color: '#ffcc00'});
+
+                 if(!id || id.length < 4) return Swal.fire({title:'Lỗi', text:'ID không hợp lệ', icon:'error', background: '#1a0000', color: '#ffcc00'});
                 if(!amt || amt <= 0 || amt > balance) return Swal.fire({title:'Lỗi', text:'Số dư không đủ', icon:'error', background: '#1a0000', color: '#ffcc00'});
                 balance -= amt; updateUI();
                 Swal.fire({title:'Thành Công', text:`Đã chuyển ${amt.toLocaleString()}đ cho ID ${id}`, icon:'success', background: '#1a0000', color: '#ffcc00'});
@@ -434,7 +439,7 @@
                     showConfirmButton: false, allowOutsideClick: false, background: '#1a0000', color: '#ffcc00',
                     didOpen: () => {
                         let intv = setInterval(() => {
-                            timer--; let tEl = document.getElementById('qr-timer'); if(tEl) tEl.innerText = timer;
+                             timer--; let tEl = document.getElementById('qr-timer'); if(tEl) tEl.innerText = timer;
                             if(timer <= 0) { clearInterval(intv); balance += amt; updateUI(); Swal.fire({title:'Thành công', text:`Đã nạp ${amt.toLocaleString()}đ vào tài khoản!`, icon:'success', background: '#1a0000', color: '#ffcc00'}); }
                         }, 1000);
                     }
@@ -466,24 +471,29 @@
     function toggleAdmin() {
         adminClickCount++;
         if(adminClickCount === 1) ADMIN_WIN_RATE = 60; else if(adminClickCount === 2) ADMIN_WIN_RATE = 70;
-        else if(adminClickCount === 3) ADMIN_WIN_RATE = 80; else if(adminClickCount === 4) ADMIN_WIN_RATE = 90;
+        else if(adminClickCount === 3) ADMIN_WIN_RATE = 80;
+        else if(adminClickCount === 4) ADMIN_WIN_RATE = 90;
         else if(adminClickCount === 5) { ADMIN_WIN_RATE = 100; document.getElementById('admin-star').classList.add('active'); }
         else { ADMIN_WIN_RATE = 50; adminClickCount = 0; document.getElementById('admin-star').classList.remove('active'); }
-        let b = document.getElementById('balance'); b.style.color = 'var(--danger)'; b.style.textShadow = '0 0 10px var(--danger)';
+        let b = document.getElementById('balance'); b.style.color = 'var(--danger)';
+        b.style.textShadow = '0 0 10px var(--danger)';
         setTimeout(() => { b.style.color = 'var(--gold-light)'; b.style.textShadow = 'none'; }, 200);
     }
 
     function updateUI() { document.getElementById('balance').innerText = balance.toLocaleString() + 'đ'; }
 
-    let currentGame = null; let currentBetAmt = 0; let selectedSide = null; let totalBetPlaced = 0; let sidePlaced = null;
-    let timer = 30; let gameInterval; let isRevealing = false; let resultCache = null;
+    let currentGame = null;
+    let currentBetAmt = 0; let selectedSide = null; let totalBetPlaced = 0; let sidePlaced = null;
+    let timer = 30;
+    let gameInterval; let isRevealing = false; let resultCache = null;
 
     // NẶN BÁT
     const cupEl = document.getElementById('cup');
     let isDragging = false, startX, startY, currentX = 0, currentY = 0;
     function dragStart(e) { 
         if(!isRevealing || !['taixiu','xocdia','baucua'].includes(currentGame) || !resultCache) return; 
-        e.preventDefault(); isDragging = true; cupEl.classList.add('dragging');
+        e.preventDefault();
+        isDragging = true; cupEl.classList.add('dragging');
         startX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; 
         startY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
     }
@@ -501,11 +511,11 @@
 
     cupEl.addEventListener('touchstart', dragStart, {passive: false}); cupEl.addEventListener('mousedown', dragStart);
     document.addEventListener('touchmove', drag, {passive: false}); document.addEventListener('mousemove', drag);
-    document.addEventListener('touchend', dragEnd); document.addEventListener('mouseup', dragEnd);
+    document.addEventListener('touchend', dragEnd);
+    document.addEventListener('mouseup', dragEnd);
 
     function generateSHA() { return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + "a8f"; }
     const bauCuaIcons = {'NAI':'🦌', 'BẦU':'🥒', 'GÀ':'🐓', 'CÁ':'🐟', 'CUA':'🦀', 'TÔM':'🦐'};
-
     const getDice = (n) => {
         const dots = [];
         if(n===1) dots.push('<div class="dice-dot" style="grid-area: g;"></div>');
@@ -518,14 +528,16 @@
     }
 
     function openGame(g) {
-        clearInterval(gameInterval); currentGame = g; isRevealing = false;
-        timer = (g==='crash' || g==='singularity') ? 10 : 15; clearBet(); totalBetPlaced = 0; resultCache = null;
+        clearInterval(gameInterval);
+        currentGame = g; isRevealing = false;
+        timer = (g==='crash' || g==='singularity') ? 10 : 15; clearBet(); totalBetPlaced = 0;
+        resultCache = null;
         
         document.getElementById('game-screen').classList.add('active');
-        ['nanbat-container','cungdan-container','saban-container','thanhquach-container','baccarat-container','crash-container','radar-container','singularity-container','gooey-wrapper','chromeorb-container','orb-text-container','btn-force-open','sha-display'].forEach(id=>document.getElementById(id).style.display='none');
+        ['nanbat-container','quantum-container','saban-container','thanhquach-container','baccarat-container','crash-container','radar-container','singularity-container','gooey-wrapper','chromeorb-container','orb-text-container','btn-force-open','sha-display'].forEach(id=>document.getElementById(id).style.display='none');
         document.getElementById('btn-confirm').innerText = "PHÁT LỆNH";
         
-        const titles = { 'taixiu':'TÀI XỈU XUNG THẦN KINH', 'cungdan':'CUNG ĐÀN THIÊN MỆNH', 'saban':'SA BÀN HUYẾT LỆNH', 'thanhquach':'THÀNH QUÁCH BẤT TỬ', 'xocdia':'XÓC ĐĨA', 'baucua':'BẦU CUA', 'baccarat':'BACCARAT HOÀNG GIA', 'crash':'TÊN LỬA CRASH', 'radar':'RADAR QUÉT ĐIỂM ALPHA', 'singularity':'LÕI HƯ KHÔNG', 'chromeorb':'THỦY NGÂN' };
+        const titles = { 'taixiu':'TÀI XỈU XUNG THẦN KINH', 'quantumdice':'MA TRẬN LẬP PHƯƠNG', 'saban':'SA BÀN HUYẾT LỆNH', 'thanhquach':'THÀNH QUÁCH BẤT TỬ', 'xocdia':'XÓC ĐĨA', 'baucua':'BẦU CUA', 'baccarat':'BACCARAT HOÀNG GIA', 'crash':'TÊN LỬA CRASH', 'radar':'RADAR QUÉT ĐIỂM ALPHA', 'singularity':'LÕI HƯ KHÔNG', 'chromeorb':'THỦY NGÂN' };
         document.getElementById('game-title').innerText = titles[g];
         document.getElementById('game-id').innerText = Math.floor(Math.random()*90000 + 10000);
 
@@ -536,48 +548,79 @@
             resetCup(); document.getElementById('dia-inner').innerHTML = '';
             if(g==='taixiu') { document.getElementById('sha-display').style.display = 'block'; document.getElementById('sha-hash').innerText = generateSHA(); }
         }
-        else if(g==='cungdan') { document.getElementById('cungdan-container').style.display = 'flex'; document.getElementById('cd-crystal').style.top = '-50px'; document.getElementById('cd-crystal').style.opacity = '0'; }
-        else if(g==='saban') { document.getElementById('saban-container').style.display = 'block'; ['n','s','e','w'].forEach(d => document.getElementById('tr-'+d).style.opacity = '0'); document.getElementById('sb-explosion').style.transform = 'translate(-50%,-50%) scale(0)'; document.getElementById('sb-explosion').style.opacity = '0'; document.getElementById('sb-center').innerText = 'CỨ ĐIỂM'; }
-        else if(g==='thanhquach') { document.getElementById('thanhquach-container').style.display = 'flex'; document.getElementById('tq-storm').style.opacity = '0'; [1,2,3].forEach(i => { let t=document.getElementById(`tq-${i}`); t.className='tower'; t.innerText=`THÁP ${i}`; }); }
-        else if(g==='baccarat') { document.getElementById('baccarat-container').style.display = 'flex'; document.getElementById('bac-cards-con').innerHTML=''; document.getElementById('bac-cards-cai').innerHTML=''; document.getElementById('bac-score-con').style.opacity=0; document.getElementById('bac-score-cai').style.opacity=0; }
-        else if(g==='crash') { document.getElementById('crash-container').style.display = 'flex'; document.getElementById('crash-mult').innerText = '1.00x'; document.getElementById('crash-mult').style.color = "var(--success)"; }
-        else if(g==='radar') { document.getElementById('radar-container').style.display = 'block'; document.getElementById('radar-target').innerText = 'DÒ...'; document.getElementById('radar-target').style.color = "var(--cyan-neon)"; document.getElementById('radar-sweep').style.opacity = '1'; document.getElementById('radar-sweep').style.animationPlayState = 'running'; for(let i=1; i<=6; i++) { let pt = document.getElementById(`alpha-${i}`); if(pt){pt.classList.remove('active'); pt.innerHTML='';} } }
-        else if(g==='singularity') { document.getElementById('singularity-container').style.display = 'flex'; document.getElementById('sing-target').disabled = false; document.getElementById('sing-target').value = ''; document.getElementById('sing-core').innerText = 'CORE'; document.getElementById('sing-core').classList.remove('core-vibrating'); }
-        else if(g==='chromeorb') { document.getElementById('gooey-wrapper').style.display = 'flex'; document.getElementById('chromeorb-container').style.display = 'block'; document.getElementById('orb-text-container').style.display = 'block'; document.getElementById('orb-1').style.transform = `translate(-50%, -50%)`; document.getElementById('orb-2').style.transform = `translate(-50%, -50%)`; document.getElementById('orb-3').style.transform = `translate(-50%, -50%)`; document.getElementById('orb-txt-1').style.opacity = 0; document.getElementById('orb-txt-2').style.opacity = 0; document.getElementById('orb-txt-3').style.opacity = 0; }
+        else if(g==='quantumdice') { 
+            document.getElementById('quantum-container').style.display = 'flex'; 
+            document.getElementById('quantum-bg').style.opacity = '0';
+            document.getElementById('quantum-total').style.opacity = '0';
+            document.getElementById('qd1').innerText = '?'; document.getElementById('qd2').innerText = '?'; document.getElementById('qd3').innerText = '?';
+        }
+        else if(g==='saban') { document.getElementById('saban-container').style.display = 'block';
+            ['n','s','e','w'].forEach(d => document.getElementById('tr-'+d).style.opacity = '0'); document.getElementById('sb-explosion').style.transform = 'translate(-50%,-50%) scale(0)'; document.getElementById('sb-explosion').style.opacity = '0'; document.getElementById('sb-center').innerText = 'CỨ ĐIỂM';
+        }
+        else if(g==='thanhquach') { document.getElementById('thanhquach-container').style.display = 'flex'; document.getElementById('tq-storm').style.opacity = '0';
+            [1,2,3].forEach(i => { let t=document.getElementById(`tq-${i}`); t.className='tower'; t.innerText=`THÁP ${i}`; }); }
+        else if(g==='baccarat') { document.getElementById('baccarat-container').style.display = 'flex';
+            document.getElementById('bac-cards-con').innerHTML=''; document.getElementById('bac-cards-cai').innerHTML=''; document.getElementById('bac-score-con').style.opacity=0; document.getElementById('bac-score-cai').style.opacity=0; }
+        else if(g==='crash') { document.getElementById('crash-container').style.display = 'flex';
+            document.getElementById('crash-mult').innerText = '1.00x'; document.getElementById('crash-mult').style.color = "var(--success)"; }
+        else if(g==='radar') { document.getElementById('radar-container').style.display = 'block';
+            document.getElementById('radar-target').innerText = 'DÒ...'; document.getElementById('radar-target').style.color = "var(--cyan-neon)"; document.getElementById('radar-sweep').style.opacity = '1'; document.getElementById('radar-sweep').style.animationPlayState = 'running';
+            for(let i=1; i<=6; i++) { let pt = document.getElementById(`alpha-${i}`); if(pt){pt.classList.remove('active'); pt.innerHTML='';} } }
+        else if(g==='singularity') { document.getElementById('singularity-container').style.display = 'flex'; document.getElementById('sing-target').disabled = false;
+            document.getElementById('sing-target').value = ''; document.getElementById('sing-core').innerText = 'CORE'; document.getElementById('sing-core').classList.remove('core-vibrating'); }
+        else if(g==='chromeorb') { document.getElementById('gooey-wrapper').style.display = 'flex';
+            document.getElementById('chromeorb-container').style.display = 'block'; document.getElementById('orb-text-container').style.display = 'block'; document.getElementById('orb-1').style.transform = `translate(-50%, -50%)`; document.getElementById('orb-2').style.transform = `translate(-50%, -50%)`; document.getElementById('orb-3').style.transform = `translate(-50%, -50%)`;
+            document.getElementById('orb-txt-1').style.opacity = 0; document.getElementById('orb-txt-2').style.opacity = 0; document.getElementById('orb-txt-3').style.opacity = 0; }
 
-        gameInterval = setInterval(gameLoop, 1000); updateStatus(`> THỜI GIAN ĐẶT: ${timer}s`);
+        gameInterval = setInterval(gameLoop, 1000);
+        updateStatus(`> THỜI GIAN ĐẶT: ${timer}s`);
     }
 
     function setupSideGrid(g) {
         let grid = document.getElementById('side-grid');
         grid.innerHTML = ''; grid.style.gridTemplateColumns = 'repeat(2, 1fr)';
-        if(g==='taixiu' || g==='chromeorb') { grid.innerHTML = `<div class="side-btn" id="s-TAI" onclick="selectSide('TAI')"><span style="font-size:20px; color:#ff3333;">TÀI</span></div><div class="side-btn" id="s-XIU" onclick="selectSide('XIU')"><span style="font-size:20px;">XỈU</span></div>`; if(g==='chromeorb'){grid.innerHTML += `<div class="side-btn" id="s-CHAN" onclick="selectSide('CHAN')">CHẴN</div><div class="side-btn" id="s-LE" onclick="selectSide('LE')">LẺ</div>`;} }
-        else if(g==='cungdan') { grid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:var(--cyan-neon); font-family:'Share Tech Mono';">KHÔNG CHỌN CỬA - AI ĐIỀU CHỈNH VUỐT</div>`; }
-        else if(g==='saban') { grid.innerHTML = `<div class="side-btn" id="s-B" onclick="selectSide('B')">BẮC</div><div class="side-btn" id="s-N" onclick="selectSide('N')">NAM</div><div class="side-btn" id="s-D" onclick="selectSide('D')">ĐÔNG</div><div class="side-btn" id="s-T" onclick="selectSide('T')">TÂY</div>`; }
-        else if(g==='thanhquach') { grid.style.gridTemplateColumns = 'repeat(3, 1fr)'; grid.innerHTML = `<div class="side-btn" id="s-1" onclick="selectSide('1')">THÁP 1</div><div class="side-btn" id="s-2" onclick="selectSide('2')">THÁP 2</div><div class="side-btn" id="s-3" onclick="selectSide('3')">THÁP 3</div>`; }
-        else if(g==='xocdia') { grid.innerHTML = `<div class="side-btn" id="s-CHAN" onclick="selectSide('CHAN')">CHẴN</div><div class="side-btn" id="s-LE" onclick="selectSide('LE')">LẺ</div>`; }
-        else if(g==='baucua') { grid.style.gridTemplateColumns = 'repeat(3, 1fr)'; grid.innerHTML = Object.keys(bauCuaIcons).map(x => `<div class="side-btn" id="s-${x}" onclick="selectSide('${x}')"><span style="font-size:24px;">${bauCuaIcons[x]}</span>${x}</div>`).join(''); }
-        else if(g==='baccarat') { grid.style.gridTemplateColumns = 'repeat(3, 1fr)'; grid.innerHTML = `<div class="side-btn" id="s-CON" onclick="selectSide('CON')">CON</div><div class="side-btn" id="s-HOA" onclick="selectSide('HOA')">HÒA</div><div class="side-btn" id="s-CAI" onclick="selectSide('CAI')">CÁI</div>`; }
-        else if(g==='crash' || g==='singularity') { grid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:var(--gold-mid); font-family:'Share Tech Mono';">NHẬP THÔNG SỐ VÀ PHÁT LỆNH</div>`; }
-        else if(g==='radar') { grid.innerHTML = `<div class="side-btn" id="s-X2" onclick="selectSide('X2')">X2</div><div class="side-btn" id="s-X8" onclick="selectSide('X8')">X8</div>`; }
+        if(g==='taixiu' || g==='chromeorb') { grid.innerHTML = `<div class="side-btn" id="s-TAI" onclick="selectSide('TAI')"><span style="font-size:20px; color:#ff3333;">TÀI</span></div><div class="side-btn" id="s-XIU" onclick="selectSide('XIU')"><span style="font-size:20px;">XỈU</span></div>`;
+            if(g==='chromeorb'){grid.innerHTML += `<div class="side-btn" id="s-CHAN" onclick="selectSide('CHAN')">CHẴN</div><div class="side-btn" id="s-LE" onclick="selectSide('LE')">LẺ</div>`;} }
+        else if(g==='quantumdice') { grid.innerHTML = `<div class="side-btn" id="s-CAO" onclick="selectSide('CAO')"><span style="font-size:20px; color:#ff3333;">CAO (11-18)</span></div><div class="side-btn" id="s-THAP" onclick="selectSide('THAP')"><span style="font-size:20px; color:var(--cyan-neon);">THẤP (3-10)</span></div>`;
+        }
+        else if(g==='saban') { grid.innerHTML = `<div class="side-btn" id="s-B" onclick="selectSide('B')">BẮC</div><div class="side-btn" id="s-N" onclick="selectSide('N')">NAM</div><div class="side-btn" id="s-D" onclick="selectSide('D')">ĐÔNG</div><div class="side-btn" id="s-T" onclick="selectSide('T')">TÂY</div>`;
+        }
+        else if(g==='thanhquach') { grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            grid.innerHTML = `<div class="side-btn" id="s-1" onclick="selectSide('1')">THÁP 1</div><div class="side-btn" id="s-2" onclick="selectSide('2')">THÁP 2</div><div class="side-btn" id="s-3" onclick="selectSide('3')">THÁP 3</div>`;
+        }
+        else if(g==='xocdia') { grid.innerHTML = `<div class="side-btn" id="s-CHAN" onclick="selectSide('CHAN')">CHẴN</div><div class="side-btn" id="s-LE" onclick="selectSide('LE')">LẺ</div>`;
+        }
+        else if(g==='baucua') { grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            grid.innerHTML = Object.keys(bauCuaIcons).map(x => `<div class="side-btn" id="s-${x}" onclick="selectSide('${x}')"><span style="font-size:24px;">${bauCuaIcons[x]}</span>${x}</div>`).join(''); }
+        else if(g==='baccarat') { grid.style.gridTemplateColumns = 'repeat(3, 1fr)';
+            grid.innerHTML = `<div class="side-btn" id="s-CON" onclick="selectSide('CON')">CON</div><div class="side-btn" id="s-HOA" onclick="selectSide('HOA')">HÒA</div><div class="side-btn" id="s-CAI" onclick="selectSide('CAI')">CÁI</div>`;
+        }
+        else if(g==='crash' || g==='singularity') { grid.innerHTML = `<div style="grid-column: span 2; text-align:center; color:var(--gold-mid); font-family:'Share Tech Mono';">NHẬP THÔNG SỐ VÀ PHÁT LỆNH</div>`;
+        }
+        else if(g==='radar') { grid.innerHTML = `<div class="side-btn" id="s-X2" onclick="selectSide('X2')">X2</div><div class="side-btn" id="s-X8" onclick="selectSide('X8')">X8</div>`;
+        }
     }
 
     function closeGame() { clearInterval(gameInterval); document.getElementById('game-screen').classList.remove('active'); }
     function updateStatus(txt) { document.getElementById('game-status').innerText = txt; }
     function selectSide(s) { if(isRevealing || totalBetPlaced > 0) return; selectedSide = s; document.querySelectorAll('.side-btn').forEach(b => b.classList.remove('active')); document.getElementById('s-'+s).classList.add('active'); }
-    function addBet(a) { if((!selectedSide && !['cungdan','crash','singularity'].includes(currentGame)) || isRevealing || totalBetPlaced > 0) return; currentBetAmt += a; if(currentBetAmt > balance) currentBetAmt = balance; document.getElementById('cur-bet-txt').innerText = currentBetAmt.toLocaleString() + 'đ'; }
+    function addBet(a) { if((!selectedSide && !['crash','singularity'].includes(currentGame)) || isRevealing || totalBetPlaced > 0) return; currentBetAmt += a;
+        if(currentBetAmt > balance) currentBetAmt = balance; document.getElementById('cur-bet-txt').innerText = currentBetAmt.toLocaleString() + 'đ';
+    }
     
     function confirmBet() { 
         if(currentBetAmt > 0 && totalBetPlaced === 0) { 
             if(currentGame === 'singularity') {
                 let sVal = parseFloat(document.getElementById('sing-target').value);
                 if(isNaN(sVal) || sVal < 1.00 || sVal > 1000.00) { Swal.fire({title:"LỖI", text:"Nhập số từ 1.00 đến 1000.00", icon:"error", background: '#1a0000', color: '#ffcc00'}); return; }
-                sidePlaced = sVal; document.getElementById('sing-target').disabled = true;
-            } else if (currentGame === 'crash') { sidePlaced = 'CRASH_BET'; } 
-            else if (currentGame === 'cungdan') { sidePlaced = 'PLAY'; }
-            else if (selectedSide) { sidePlaced = selectedSide; } 
-            else return;
-            balance -= currentBetAmt; totalBetPlaced = currentBetAmt; updateUI(); document.getElementById('cur-bet-txt').innerText = "ĐÃ KHÓA";
+                sidePlaced = sVal;
+                document.getElementById('sing-target').disabled = true;
+            } else if (currentGame === 'crash') { sidePlaced = 'CRASH_BET';
+            } else if (selectedSide) { sidePlaced = selectedSide;
+            } else return;
+
+            balance -= currentBetAmt;
+            totalBetPlaced = currentBetAmt; updateUI(); document.getElementById('cur-bet-txt').innerText = "ĐÃ KHÓA";
             if(currentGame === 'crash') document.getElementById('btn-confirm').innerText = "RÚT QUÂN";
         } 
     }
@@ -588,23 +631,29 @@
     async function startRevealingWrapper() {
         let playerCheatState = adminClickCount < 3 ? 0 : (adminClickCount === 3 ? 1 : 2);
         
-        if(['taixiu', 'xocdia', 'baucua'].includes(currentGame)) {
+        if(['taixiu', 'xocdia', 'baucua', 'quantumdice'].includes(currentGame)) {
             const auditBox = document.getElementById('audit-box');
             const logContent = document.getElementById('audit-log-content');
             const statusText = document.getElementById('audit-status');
-            document.querySelector('.nanbat-container').classList.add('shaking');
-            auditBox.style.display = 'block'; logContent.className = 'audit-log'; logContent.innerHTML = ''; statusText.innerText = "ĐANG QUÉT..."; statusText.style.color = "#ffcc00";
+            
+            if (currentGame !== 'quantumdice') document.querySelector('.nanbat-container').classList.add('shaking');
+            
+            auditBox.style.display = 'block'; logContent.className = 'audit-log'; logContent.innerHTML = '';
+            statusText.innerText = "ĐANG QUÉT..."; statusText.style.color = "#ffcc00";
+
             const logs = ["> Khởi tạo giao thức mã hóa SHA-256...", "> Quét cảm biến chống gian lận vật lý...", "> Đồng bộ máy chủ toàn cầu..."];
             for (let line of logs) { logContent.innerHTML += `<div>${line}</div>`; await new Promise(r => setTimeout(r, 300)); }
             
             if(Math.random() < 0.05 && totalBetPlaced > 0) {
-                logContent.className = 'audit-log danger'; statusText.innerText = "CẢNH BÁO"; statusText.style.color = "#ff4444";
+                logContent.className = 'audit-log danger';
+                statusText.innerText = "CẢNH BÁO"; statusText.style.color = "#ff4444";
                 logContent.innerHTML += `<div>> [PHÁT HIỆN] Dữ liệu bị nhiễu! Hủy ván...</div>`;
-                setTimeout(() => { document.querySelector('.nanbat-container').classList.remove('shaking'); auditBox.style.display = 'none'; balance += totalBetPlaced; updateUI(); Swal.fire({ title: 'HỆ THỐNG BẢO VỆ', text: 'Hoàn trả tiền cược!', icon: 'warning', background: '#1a0000', color: '#ffcc00' }); totalBetPlaced = 0; setTimeout(() => openGame(currentGame), 1000); }, 1500);
+                setTimeout(() => { if(currentGame !== 'quantumdice') document.querySelector('.nanbat-container').classList.remove('shaking'); auditBox.style.display = 'none'; balance += totalBetPlaced; updateUI(); Swal.fire({ title: 'HỆ THỐNG BẢO VỆ', text: 'Hoàn trả tiền cược!', icon: 'warning', background: '#1a0000', color: '#ffcc00' }); totalBetPlaced = 0; setTimeout(() => openGame(currentGame), 1000); }, 1500);
                 return;
             } else {
-                logContent.innerHTML += `<div style="color:#00e676">> [HỢP LỆ] Ván đấu minh bạch.</div>`; statusText.innerText = "HOÀN TẤT"; statusText.style.color = "#00e676";
-                await new Promise(r => setTimeout(r, 600)); auditBox.style.display = 'none'; document.querySelector('.nanbat-container').classList.remove('shaking');
+                logContent.innerHTML += `<div style="color:#00e676">> [HỢP LỆ] Ván đấu minh bạch.</div>`;
+                statusText.innerText = "HOÀN TẤT"; statusText.style.color = "#00e676";
+                await new Promise(r => setTimeout(r, 600)); auditBox.style.display = 'none'; if(currentGame !== 'quantumdice') document.querySelector('.nanbat-container').classList.remove('shaking');
             }
         }
         startRevealing(playerCheatState);
@@ -618,7 +667,7 @@
                 if(currentGame === 'taixiu') { 
                     res = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
                     let sum = res[0]+res[1]+res[2]; let tx = sum >= 11 ? 'TAI' : 'XIU';
-                    isWinCondition = (tx === sidePlaced); 
+                    isWinCondition = (tx === sidePlaced);
                 } 
                 else if(currentGame === 'xocdia') { 
                     res = [Math.random()>0.5?1:0, Math.random()>0.5?1:0, Math.random()>0.5?1:0, Math.random()>0.5?1:0];
@@ -643,23 +692,58 @@
             }
             document.getElementById('dia-inner').innerHTML = h;
         } 
-        else if(currentGame === 'cungdan') {
-            updateStatus("> ĐANG VUỐT ĐÀN..."); let isWin = false;
-            if(totalBetPlaced > 0) { isWin = (playerCheatState === 2) ? true : ((playerCheatState === 0) ? false : Math.random() > 0.5); }
-            resultCache = { win: isWin, multiplier: (Math.random() * 2 + 1.5).toFixed(2) };
+        else if (currentGame === 'quantumdice') {
+            updateStatus("> ĐANG TRÍCH XUẤT LÕI...");
+            let isWin = false;
+            let res = [];
+            let isWinCondition = false;
+            do {
+                res = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
+                let sum = res[0] + res[1] + res[2];
+                let type = sum >= 11 ? 'CAO' : 'THAP';
+                isWinCondition = (type === sidePlaced);
+            } while (totalBetPlaced > 0 && ((playerCheatState === 2 && !isWinCondition) || (playerCheatState === 0 && isWinCondition)));
             
-            let chords = document.querySelectorAll('.chord'); chords.forEach(c => c.classList.add('strummed'));
-            let crystal = document.getElementById('cd-crystal'); crystal.style.opacity = '1'; crystal.style.top = '120px';
+            resultCache = { dice: res, sum: res[0]+res[1]+res[2], win: isWinCondition };
+
+            let diceWrap = document.getElementById('quantum-dice-wrap');
+            diceWrap.classList.add('matrix-rolling');
+            let qd1 = document.getElementById('qd1');
+            let qd2 = document.getElementById('qd2');
+            let qd3 = document.getElementById('qd3');
             
+            let rollInt = setInterval(() => {
+                qd1.innerText = Math.floor(Math.random()*6)+1;
+                qd2.innerText = Math.floor(Math.random()*6)+1;
+                qd3.innerText = Math.floor(Math.random()*6)+1;
+            }, 60);
+
             setTimeout(() => {
-                chords.forEach(c => c.classList.remove('strummed'));
-                if(isWin) { crystal.style.boxShadow = "0 0 50px var(--gold-mid)"; crystal.style.background = "var(--gold-mid)"; updateStatus(`> BẮT TRÚNG - x${resultCache.multiplier}`); } 
-                else { crystal.style.opacity = '0'; updateStatus("> TRƯỢT VÀO HƯ KHÔNG"); }
-                setTimeout(() => checkWin(), 1000);
-            }, 1000);
+                clearInterval(rollInt);
+                diceWrap.classList.remove('matrix-rolling');
+                qd1.innerText = resultCache.dice[0];
+                qd2.innerText = resultCache.dice[1];
+                qd3.innerText = resultCache.dice[2];
+                
+                document.getElementById('quantum-total').innerText = resultCache.sum + " ĐIỂM";
+                document.getElementById('quantum-total').style.opacity = 1;
+                document.getElementById('quantum-bg').style.opacity = 0.8;
+                
+                let sn = document.getElementById('supernova-effect');
+                sn.style.opacity = 1;
+                setTimeout(() => sn.style.opacity = 0, 150);
+                
+                if(navigator.vibrate) navigator.vibrate([100, 50, 100]);
+                document.querySelector('.display-area').classList.add('shake-hard');
+                setTimeout(() => document.querySelector('.display-area').classList.remove('shake-hard'), 500);
+
+                updateStatus("> PHÂN TÍCH HOÀN TẤT");
+                setTimeout(() => checkWin(), 1500);
+            }, 2000);
         }
         else if(currentGame === 'saban') {
-            updateStatus("> ĐANG HÀNH QUÂN..."); let isWin = false;
+            updateStatus("> ĐANG HÀNH QUÂN...");
+            let isWin = false;
             if(totalBetPlaced > 0) { isWin = (playerCheatState === 2) ? true : ((playerCheatState === 0) ? false : Math.random() > 0.4); }
             resultCache = { win: isWin };
             let dirMap = {'B':'n', 'N':'s', 'D':'e', 'T':'w'}; let activeLine = document.getElementById(`tr-${dirMap[sidePlaced]}`);
@@ -673,7 +757,8 @@
             }, 1000);
         }
         else if(currentGame === 'thanhquach') {
-            updateStatus("> BÃO SỐ ĐANG QUÉT..."); let isWin = false;
+            updateStatus("> BÃO SỐ ĐANG QUÉT...");
+            let isWin = false;
             if(totalBetPlaced > 0) { isWin = (playerCheatState === 2) ? true : ((playerCheatState === 0) ? false : Math.random() > 0.66); }
             resultCache = { win: isWin, survivor: isWin ? sidePlaced : (sidePlaced==='1'?'2':'1') }; 
             
@@ -694,7 +779,8 @@
             do {
                 con = [Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1];
                 cai = [Math.floor(Math.random()*9)+1, Math.floor(Math.random()*9)+1]; cScore = (con[0]+con[1])%10; bScore = (cai[0]+cai[1])%10;
-                if(cScore > bScore) w = 'CON'; else if(bScore > cScore) w = 'CAI'; else w = 'HOA';
+                if(cScore > bScore) w = 'CON';
+                else if(bScore > cScore) w = 'CAI'; else w = 'HOA';
             } while (totalBetPlaced > 0 && ((playerCheatState === 2 && w !== sidePlaced) || (playerCheatState === 0 && w === sidePlaced)));
             resultCache = { con: con, cai: cai, w: w, cScore: cScore, bScore: bScore };
         }
@@ -709,13 +795,16 @@
             runCrash();
         }
         else if(currentGame === 'radar') {
-            let alphaResults = ['MISS', 'MISS', 'MISS', 'MISS', 'MISS', 'MISS']; let revealIndices = [];
+            let alphaResults = ['MISS', 'MISS', 'MISS', 'MISS', 'MISS', 'MISS'];
+            let revealIndices = [];
             while(revealIndices.length < 3) { let r = Math.floor(Math.random() * 6); if(!revealIndices.includes(r)) revealIndices.push(r); }
             let isWin = false;
             if(totalBetPlaced > 0 && playerCheatState === 2) {
-                alphaResults[revealIndices[0]] = sidePlaced; alphaResults[revealIndices[1]] = (sidePlaced==='X2'?'X8':'X2'); alphaResults[revealIndices[2]] = 'MISS'; isWin = true;
+                alphaResults[revealIndices[0]] = sidePlaced;
+                alphaResults[revealIndices[1]] = (sidePlaced==='X2'?'X8':'X2'); alphaResults[revealIndices[2]] = 'MISS'; isWin = true;
             } else if (totalBetPlaced > 0 && playerCheatState === 0) {
-                alphaResults[revealIndices[0]] = (sidePlaced==='X2'?'X8':'MISS'); alphaResults[revealIndices[1]] = 'MISS'; alphaResults[revealIndices[2]] = 'MISS'; isWin = false;
+                alphaResults[revealIndices[0]] = (sidePlaced==='X2'?'X8':'MISS');
+                alphaResults[revealIndices[1]] = 'MISS'; alphaResults[revealIndices[2]] = 'MISS'; isWin = false;
             } else {
                 isWin = Math.random() > 0.5;
                 if (isWin) alphaResults[revealIndices[0]] = sidePlaced; else alphaResults[revealIndices[0]] = (sidePlaced==='X2'?'X8':'MISS');
@@ -725,7 +814,8 @@
             setTimeout(() => { forceOpenRadar(); }, 2000);
         }
         else if(currentGame === 'singularity') {
-            document.getElementById('game-status').innerText = "> ĐANG DÒ..."; document.getElementById('sing-core').classList.add('core-vibrating'); 
+            document.getElementById('game-status').innerText = "> ĐANG DÒ...";
+            document.getElementById('sing-core').classList.add('core-vibrating'); 
             let targetNum = parseFloat(sidePlaced) || 0; let resNum;
             if(totalBetPlaced > 0 && playerCheatState === 2) { resNum = targetNum; } 
             else if (totalBetPlaced > 0 && playerCheatState === 0) { do { resNum = (Math.random() * 999) + 1; } while(resNum.toFixed(2) === targetNum.toFixed(2)); } 
@@ -734,11 +824,13 @@
             setTimeout(() => { forceOpenSingularity(); }, 3000);
         }
         else if(currentGame === 'chromeorb') {
-            document.getElementById('game-status').innerText = "> ĐANG TÁCH RỜI..."; document.getElementById('btn-force-open').style.display = 'block';
+            document.getElementById('game-status').innerText = "> ĐANG TÁCH RỜI...";
+            document.getElementById('btn-force-open').style.display = 'block';
             let drops, tx, cl;
             do { 
                 drops = [Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1, Math.floor(Math.random()*6)+1];
-                let sum = drops[0] + drops[1] + drops[2]; tx = sum >= 11 ? 'TAI' : 'XIU'; cl = sum % 2 === 0 ? 'CHAN' : 'LE';
+                let sum = drops[0] + drops[1] + drops[2]; tx = sum >= 11 ? 'TAI' : 'XIU';
+                cl = sum % 2 === 0 ? 'CHAN' : 'LE';
             } while (totalBetPlaced > 0 && ((playerCheatState === 2 && tx !== sidePlaced && cl !== sidePlaced) || (playerCheatState === 0 && (tx === sidePlaced || cl === sidePlaced))));
             resultCache = { drops: drops, taiXiu: tx, chanLe: cl };
         }
@@ -749,19 +841,24 @@
         document.getElementById('btn-force-open').style.display = 'none'; updateStatus("> KẾT QUẢ");
 
         if(['taixiu','xocdia','baucua'].includes(currentGame)) {
-            cupEl.style.transform = `translate(calc(-50% + 200px), -300px) rotate(45deg)`; cupEl.style.opacity = '0'; 
+            cupEl.style.transform = `translate(calc(-50% + 200px), -300px) rotate(45deg)`;
+            cupEl.style.opacity = '0'; 
             if(currentGame === 'taixiu') document.getElementById('shockwave').classList.add('active');
             setTimeout(() => checkWin(), 600);
         } else if(currentGame === 'baccarat') {
             document.getElementById('bac-cards-con').innerHTML = `<div class="bac-card revealed ${resultCache.con[0]%2===0?'red':''}">${resultCache.con[0]}</div><div class="bac-card revealed ${resultCache.con[1]%2===0?'red':''}">${resultCache.con[1]}</div>`;
             document.getElementById('bac-cards-cai').innerHTML = `<div class="bac-card revealed ${resultCache.cai[0]%2===0?'red':''}">${resultCache.cai[0]}</div><div class="bac-card revealed ${resultCache.cai[1]%2===0?'red':''}">${resultCache.cai[1]}</div>`;
             document.getElementById('bac-score-con').innerText = resultCache.cScore; document.getElementById('bac-score-cai').innerText = resultCache.bScore;
-            document.getElementById('bac-score-con').style.opacity = 1; document.getElementById('bac-score-cai').style.opacity = 1; 
+            document.getElementById('bac-score-con').style.opacity = 1;
+            document.getElementById('bac-score-cai').style.opacity = 1; 
             setTimeout(() => checkWin(), 300);
         } else if(currentGame === 'chromeorb') {
-            document.getElementById('orb-1').style.transform = `translate(-180%, -150%)`; document.getElementById('orb-txt-1').innerText = resultCache.drops[0]; document.getElementById('orb-txt-1').style.opacity = 1; document.getElementById('orb-txt-1').style.top = '15%'; document.getElementById('orb-txt-1').style.left = '25%';
-            document.getElementById('orb-2').style.transform = `translate(80%, -150%)`; document.getElementById('orb-txt-2').innerText = resultCache.drops[1]; document.getElementById('orb-txt-2').style.opacity = 1; document.getElementById('orb-txt-2').style.top = '15%'; document.getElementById('orb-txt-2').style.left = '75%';
-            document.getElementById('orb-3').style.transform = `translate(-50%, 150%)`; document.getElementById('orb-txt-3').innerText = resultCache.drops[2]; document.getElementById('orb-txt-3').style.opacity = 1; document.getElementById('orb-txt-3').style.top = '75%'; document.getElementById('orb-txt-3').style.left = '50%';
+            document.getElementById('orb-1').style.transform = `translate(-180%, -150%)`;
+            document.getElementById('orb-txt-1').innerText = resultCache.drops[0]; document.getElementById('orb-txt-1').style.opacity = 1; document.getElementById('orb-txt-1').style.top = '15%'; document.getElementById('orb-txt-1').style.left = '25%';
+            document.getElementById('orb-2').style.transform = `translate(80%, -150%)`; document.getElementById('orb-txt-2').innerText = resultCache.drops[1];
+            document.getElementById('orb-txt-2').style.opacity = 1; document.getElementById('orb-txt-2').style.top = '15%'; document.getElementById('orb-txt-2').style.left = '75%';
+            document.getElementById('orb-3').style.transform = `translate(-50%, 150%)`; document.getElementById('orb-txt-3').innerText = resultCache.drops[2]; document.getElementById('orb-txt-3').style.opacity = 1;
+            document.getElementById('orb-txt-3').style.top = '75%'; document.getElementById('orb-txt-3').style.left = '50%';
             setTimeout(() => checkWin(), 300);
         }
     }
@@ -770,7 +867,8 @@
         if(!isRevealing || !resultCache.active) return;
         resultCache.current += 0.05; document.getElementById('crash-mult').innerText = resultCache.current.toFixed(2) + 'x';
         if(resultCache.current >= resultCache.target) {
-            resultCache.active = false; document.getElementById('crash-mult').style.color = "var(--danger)"; document.getElementById('game-status').innerText = "> TÊN LỬA ĐÃ NỔ";
+            resultCache.active = false;
+            document.getElementById('crash-mult').style.color = "var(--danger)"; document.getElementById('game-status').innerText = "> TÊN LỬA ĐÃ NỔ";
             document.getElementById('btn-confirm').innerText = "PHÁT LỆNH"; document.getElementById('btn-confirm').style.background = ""; document.getElementById('btn-confirm').onclick = confirmBet;
             checkWinCrash(false);
         } else { setTimeout(runCrash, 50); }
@@ -779,45 +877,56 @@
     function cashoutCrash() {
         if(!isRevealing || !resultCache.active) return;
         resultCache.active = false; let winAmt = totalBetPlaced * resultCache.current; balance += winAmt; updateUI();
-        document.getElementById('btn-confirm').innerText = "PHÁT LỆNH"; document.getElementById('btn-confirm').style.background = ""; document.getElementById('btn-confirm').onclick = confirmBet;
+        document.getElementById('btn-confirm').innerText = "PHÁT LỆNH"; document.getElementById('btn-confirm').style.background = "";
+        document.getElementById('btn-confirm').onclick = confirmBet;
         Swal.fire({ title: "RÚT QUÂN", text: `Thu về: ${winAmt.toLocaleString()}đ`, icon: "success", background: '#1a0000', color: '#ffcc00' });
         totalBetPlaced = 0; setTimeout(() => openGame(currentGame), 3000);
     }
 
     function checkWinCrash(userCashedOut) { 
-        if(!userCashedOut && totalBetPlaced > 0) { Swal.fire({ title: "TỬ TRẬN", text: "Nổ trước khi rút!", icon: "error", background: '#1a0000', color: '#ffcc00' }); totalBetPlaced = 0; } 
+        if(!userCashedOut && totalBetPlaced > 0) { Swal.fire({ title: "TỬ TRẬN", text: "Nổ trước khi rút!", icon: "error", background: '#1a0000', color: '#ffcc00' });
+        totalBetPlaced = 0; } 
         setTimeout(() => openGame(currentGame), 3000);
     }
 
     function forceOpenRadar() {
-        document.getElementById('game-status').innerText = "> TỌA ĐỘ ĐÃ KHÓA"; document.getElementById('radar-sweep').style.animationPlayState = 'paused'; document.getElementById('radar-sweep').style.opacity = '0';
+        document.getElementById('game-status').innerText = "> TỌA ĐỘ ĐÃ KHÓA";
+        document.getElementById('radar-sweep').style.animationPlayState = 'paused'; document.getElementById('radar-sweep').style.opacity = '0';
         resultCache.revealIndices.forEach(idx => { let pt = document.getElementById(`alpha-${idx+1}`); pt.classList.add('active'); pt.innerHTML = `<span class="alpha-text">${resultCache.alphaResults[idx]}</span>`; });
         if(resultCache.isWin) { document.getElementById('radar-target').innerText = "TRÚNG X8"; document.getElementById('radar-target').style.color = "var(--success)"; } 
-        else { document.getElementById('radar-target').innerText = "TRƯỢT"; document.getElementById('radar-target').style.color = "var(--danger)"; }
+        else { document.getElementById('radar-target').innerText = "TRƯỢT";
+        document.getElementById('radar-target').style.color = "var(--danger)"; }
         setTimeout(() => checkWin(), 300);
     }
 
     function forceOpenSingularity() {
-        document.getElementById('game-status').innerText = "> LÕI ĐÃ NỔ"; document.getElementById('sing-core').classList.remove('core-vibrating'); document.getElementById('sing-core').innerText = resultCache; setTimeout(() => checkWin(), 300);
+        document.getElementById('game-status').innerText = "> LÕI ĐÃ NỔ";
+        document.getElementById('sing-core').classList.remove('core-vibrating'); document.getElementById('sing-core').innerText = resultCache; setTimeout(() => checkWin(), 300);
     }
 
     function checkWin() {
         if(totalBetPlaced === 0) { setTimeout(() => openGame(currentGame), 2000); return; }
         let isWin = false; let payout = 0;
-        
-        if(currentGame === 'taixiu') { let sum = resultCache[0]+resultCache[1]+resultCache[2]; let tx = sum >= 11 ? 'TAI' : 'XIU'; if(sidePlaced === tx) { isWin = true; payout = totalBetPlaced * 1.98; } }
-        else if(currentGame === 'cungdan') { if(resultCache.win) { isWin = true; payout = totalBetPlaced * parseFloat(resultCache.multiplier); } }
+        if(currentGame === 'taixiu') { let sum = resultCache[0]+resultCache[1]+resultCache[2]; let tx = sum >= 11 ? 'TAI' : 'XIU';
+            if(sidePlaced === tx) { isWin = true; payout = totalBetPlaced * 1.98; } }
+        else if (currentGame === 'quantumdice') {
+            if(resultCache.win) { isWin = true; payout = totalBetPlaced * 1.98; }
+        }
         else if(currentGame === 'saban') { if(resultCache.win) { isWin = true; payout = totalBetPlaced * 2; } }
         else if(currentGame === 'thanhquach') { if(resultCache.win) { isWin = true; payout = totalBetPlaced * 2.8; } }
-        else if(currentGame === 'xocdia') { let reds = resultCache.filter(x=>x===1).length; let cl = reds % 2 === 0 ? 'CHAN' : 'LE'; if(sidePlaced === cl) { isWin = true; payout = totalBetPlaced * 1.98; } }
-        else if(currentGame === 'baucua') { let matches = resultCache.filter(x=>x===sidePlaced).length; if(matches > 0) { isWin = true; payout = totalBetPlaced + (totalBetPlaced * matches); } }
-        else if(currentGame === 'baccarat') { if(sidePlaced === resultCache.w) { isWin = true; payout = totalBetPlaced * (sidePlaced==='HOA' ? 9 : (sidePlaced==='CAI' ? 1.95 : 2)); } }
+        else if(currentGame === 'xocdia') { let reds = resultCache.filter(x=>x===1).length;
+            let cl = reds % 2 === 0 ? 'CHAN' : 'LE'; if(sidePlaced === cl) { isWin = true; payout = totalBetPlaced * 1.98; } }
+        else if(currentGame === 'baucua') { let matches = resultCache.filter(x=>x===sidePlaced).length;
+            if(matches > 0) { isWin = true; payout = totalBetPlaced + (totalBetPlaced * matches); } }
+        else if(currentGame === 'baccarat') { if(sidePlaced === resultCache.w) { isWin = true;
+            payout = totalBetPlaced * (sidePlaced==='HOA' ? 9 : (sidePlaced==='CAI' ? 1.95 : 2)); } }
         else if(currentGame === 'radar') { if(resultCache.isWin) { isWin = true; payout = totalBetPlaced * (sidePlaced === 'X8' ? 8 : 2); } }
         else if(currentGame === 'singularity') { if(resultCache == sidePlaced) { isWin = true; payout = totalBetPlaced * 100; } }
         else if(currentGame === 'chromeorb') { if(sidePlaced === resultCache.taiXiu || sidePlaced === resultCache.chanLe) { isWin = true; payout = totalBetPlaced * 1.98; } }
 
         if(isWin) { 
-            balance += payout; updateUI(); if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+            balance += payout;
+            updateUI(); if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
             Swal.fire({ title: "ĐẠI THẮNG", text: `Thu về: ${payout.toLocaleString()}đ`, icon: "success", background: '#1a0000', color: '#ffcc00' });
         } else { 
             Swal.fire({ title: "TỬ TRẬN", text: "Mất sạch quân lương!", icon: "error", background: '#1a0000', color: '#ffcc00' });
@@ -826,11 +935,20 @@
     }
 
     // CHỨNG CHỈ DRAG
-    const certBadge = document.getElementById('cert-badge'); let isDraggingCert = false, certStartX, certStartY, certInitialLeft, certInitialTop, hasDraggedCert = false;
-    function dragStartCert(e) { isDraggingCert = true; hasDraggedCert = false; certStartX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; certStartY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; const rect = certBadge.getBoundingClientRect(); certInitialLeft = rect.left; certInitialTop = rect.top; certBadge.style.transition = 'none'; }
-    function dragCert(e) { if (!isDraggingCert) return; e.preventDefault(); let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; let clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; let dx = clientX - certStartX; let dy = clientY - certStartY; if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasDraggedCert = true; certBadge.style.left = `${certInitialLeft + dx}px`; certBadge.style.top = `${certInitialTop + dy}px`; }
-    function dragEndCert(e) { if (!isDraggingCert) return; isDraggingCert = false; certBadge.style.transition = 'transform 0.1s'; if (!hasDraggedCert) showCert(); }
-    function showCert() { Swal.fire({ title: 'CHỨNG CHỈ QUỐC TẾ', html: `<p style="color:#00e676; font-size:12px;">ĐANG GIÁM SÁT TRỰC TIẾP</p>`, background: '#1a0000', color: '#ffcc00' }); }
+    const certBadge = document.getElementById('cert-badge');
+    let isDraggingCert = false, certStartX, certStartY, certInitialLeft, certInitialTop, hasDraggedCert = false;
+    function dragStartCert(e) { isDraggingCert = true; hasDraggedCert = false;
+        certStartX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; certStartY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY; const rect = certBadge.getBoundingClientRect();
+        certInitialLeft = rect.left; certInitialTop = rect.top; certBadge.style.transition = 'none'; }
+    function dragCert(e) { if (!isDraggingCert) return; e.preventDefault();
+        let clientX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX; let clientY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
+        let dx = clientX - certStartX; let dy = clientY - certStartY;
+        if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasDraggedCert = true; certBadge.style.left = `${certInitialLeft + dx}px`;
+        certBadge.style.top = `${certInitialTop + dy}px`; }
+    function dragEndCert(e) { if (!isDraggingCert) return; isDraggingCert = false;
+        certBadge.style.transition = 'transform 0.1s'; if (!hasDraggedCert) showCert(); }
+    function showCert() { Swal.fire({ title: 'CHỨNG CHỈ QUỐC TẾ', html: `<p style="color:#00e676; font-size:12px;">ĐANG GIÁM SÁT TRỰC TIẾP</p>`, background: '#1a0000', color: '#ffcc00' });
+    }
     certBadge.addEventListener('mousedown', dragStartCert); certBadge.addEventListener('touchstart', dragStartCert, {passive: false});
     document.addEventListener('mousemove', dragCert); document.addEventListener('touchmove', dragCert, {passive: false});
     document.addEventListener('mouseup', dragEndCert); document.addEventListener('touchend', dragEndCert);
