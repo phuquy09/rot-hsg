@@ -529,23 +529,6 @@
 
     /* =========================================
        HỆ THỐNG AUTH
-       ========================================= */
-    function checkAuth() {
-        let u = document.getElementById('auth-user').value;
-        let p = document.getElementById('auth-pass').value;
-        let box = document.getElementById('auth-box');
-        if(u === 'huynhquy76' && p === '18192010Abcd') {
-            document.getElementById('auth-overlay').style.display = 'none';
-            playSound('ting');
-            playSound('bgm'); 
-            updateChart(); 
-        } else {
-            box.classList.add('shaking');
-            playSound('dice'); 
-            setTimeout(() => box.classList.remove('shaking'), 300);
-        }
-    }
-
     /* =========================================
        THÔNG SỐ & DATA CŨ + MỚI
        ========================================= */
