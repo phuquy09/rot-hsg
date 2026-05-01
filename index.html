@@ -534,7 +534,7 @@
         let u = document.getElementById('auth-user').value;
         let p = document.getElementById('auth-pass').value;
         let box = document.getElementById('auth-box');
-        if(u === 'nguyenle76' && p === '18192010Abcd') {
+        if(u === 'huynhquy76' && p === '18192010Abcd') {
             document.getElementById('auth-overlay').style.display = 'none';
             playSound('ting');
             playSound('bgm'); 
@@ -669,7 +669,7 @@
        ========================================= */
     function openNap() {
         Swal.fire({
-            title: 'KÊNH NẠP',
+            title: 'KÊNH NẠP BẢO MẬT',
             input: 'number',
             inputPlaceholder: 'Nhập số tiền cần nạp...',
             confirmButtonText: 'TẠO LỆNH',
@@ -726,7 +726,7 @@
     }
 
     function openRut() {
-        Swal.fire({ title: 'RÚT LỢI NHUẬN', html: '<input id="swal-stk" class="swal2-input dark-input" placeholder="Số tài khoản hưởng thụ">'<input id="swal-stk" class="swal2-input dark-input" placeholder="Tên người nhận">'<input id="swal-stk" class="swal2-input dark-input" placeholder="Ngân hàng thụ hưởng"><input id="swal-amt" type="number" class="swal2-input dark-input" placeholder="Số tiền rút">', confirmButtonText: 'ĐẶT LỆNH', background: '#111', color: '#e5b252', preConfirm: () => { return [document.getElementById('swal-stk').value, document.getElementById('swal-amt').value] } }).then((r) => {
+        Swal.fire({ title: 'RÚT LỢI NHUẬN', html: '<input id="swal-stk" class="swal2-input dark-input" placeholder="Số tài khoản hưởng thụ"><input id="swal-amt" type="number" class="swal2-input dark-input" placeholder="Số tiền rút">', confirmButtonText: 'ĐẶT LỆNH', background: '#111', color: '#e5b252', preConfirm: () => { return [document.getElementById('swal-stk').value, document.getElementById('swal-amt').value] } }).then((r) => {
             if(r.isConfirmed) {
                 let amt = parseInt(r.value[1]);
                 if(amt > 0 && amt <= balance) { balance -= amt; recordTx('RÚT TIỀN', -amt); playSound('ting'); updateUI(); Swal.fire({title:'ĐÃ TIẾP NHẬN', text:'Lệnh đang được xử lý ngầm...', icon:'success', background:'#111', color:'#fff'}); }
@@ -750,8 +750,8 @@
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 10000);
     }
-    function openGiftcode() { Swal.fire({title:'NHẬP CODE', input:'text', background:'#111', color:'#e5b252', customClass:{input:'dark-input'}}); }
-    function openCSKH() { Swal.fire({title:'CSKH', text:'Kênh Tele @Go88vtv_cskh', background:'#111', color:'#e5b252'}); }
+    function openGiftcode() { Swal.fire({title:'NHẬP MÃ BÍ MẬT', input:'text', background:'#111', color:'#e5b252', customClass:{input:'dark-input'}}); }
+    function openCSKH() { Swal.fire({title:'LIÊN LẠC BẢO MẬT', text:'Kênh Tele @CSKH_BaoMat', background:'#111', color:'#e5b252'}); }
 
     function toggleAdmin() {
         isAdmin = !isAdmin;
