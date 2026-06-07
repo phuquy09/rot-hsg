@@ -1,307 +1,364 @@
-
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>HỆ THỐNG M.I.S THỰC CHIẾN V.T.V</title>
+    <title>TRẠM CHỈ HUY M.I.S - V.T.V CORE</title>
     <style>
-        /* --- GIAO DIỆN CYBERPUNK GLASSMORPHISM --- */
+        /* --- GIAO DIỆN CYBERPUNK GLASSMORPHISM TỐI ƯU --- */
         :root {
-            --nen-toi: #060713;
-            --mau-neon-xanh: #00ffcc;
-            --mau-neon-hong: #ff007f;
-            --mau-kinh-mo: rgba(15, 22, 42, 0.7);
-            --vien-neon: rgba(0, 255, 204, 0.15);
+            --nen-toi: #060713; --mau-neon-xanh: #00ffcc;
+            --mau-neon-hong: #ff007f; --mau-canh-bao: #ff3333;
+            --mau-kinh-mo: rgba(15, 22, 42, 0.7); --vien-neon: rgba(0, 255, 204, 0.15);
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
 
         body {
-            background-color: var(--nen-toi);
-            color: #ffffff;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            background-color: var(--nen-toi); color: #ffffff; min-height: 100vh;
+            display: flex; flex-direction: column; align-items: center; padding: 20px;
             background-image: linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
                               linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px;
+            background-size: 30px 30px; overflow-x: hidden;
         }
 
-        header { text-align: center; margin-bottom: 30px; }
-        header h1 { font-size: 2.5rem; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 15px var(--mau-neon-xanh); }
-        header p { color: #8a99ad; margin-top: 5px; }
-
-        .khung-dieu-hanh { display: grid; grid-template-columns: 2fr 1fr; gap: 25px; width: 100%; max-width: 1300px; }
+        header { text-align: center; margin-bottom: 20px; }
+        header h1 { font-size: 2.2rem; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 15px var(--mau-neon-xanh); }
+        
+        /* Layout phân chia 3 cột để chứa nhiều tính năng */
+        .khung-dieu-hanh { 
+            display: grid; 
+            grid-template-columns: 1fr 1.5fr 1fr; 
+            gap: 20px; width: 100%; max-width: 1400px; 
+        }
 
         .the-giao-dien {
-            background: var(--mau-kinh-mo);
-            backdrop-filter: blur(15px); border: 1px solid var(--vien-neon);
-            border-radius: 16px; padding: 20px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            background: var(--mau-kinh-mo); backdrop-filter: blur(15px); border: 1px solid var(--vien-neon);
+            border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
         }
 
         .tieu-de-the {
-            font-size: 1.2rem; text-transform: uppercase; letter-spacing: 2px;
+            font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px;
             margin-bottom: 15px; color: var(--mau-neon-xanh);
             border-bottom: 1px dashed rgba(0, 255, 204, 0.3); padding-bottom: 8px;
-            display: flex; justify-content: space-between;
+            display: flex; justify-content: space-between; align-items: center;
         }
 
-        /* --- MA TRẬN NHIỆM VỤ ĐỘNG --- */
-        .ma-tran-tuan { display: flex; flex-direction: column; gap: 15px; }
-        .the-ngay {
-            background: rgba(255, 255, 255, 0.03); border-radius: 10px; padding: 15px;
-            border-left: 4px solid #475569; position: relative;
+        /* --- CỘT 1: ĐẾM NGƯỢC THI TỐT NGHIỆP & LEVEL HỆ THỐNG --- */
+        .khung-dem-nguoc { text-align: center; padding: 20px 10px; }
+        .chu-dem-nguoc { font-size: 1.5rem; font-family: 'Courier New'; color: var(--mau-canh-bao); text-shadow: 0 0 10px var(--mau-canh-bao); margin-bottom: 15px; font-weight: bold;}
+        .bang-so-dem-nguoc { display: flex; justify-content: center; gap: 10px; }
+        .o-so { background: rgba(255,51,51,0.1); border: 1px solid var(--mau-canh-bao); padding: 10px; border-radius: 8px; width: 60px; }
+        .o-so span { display: block; font-size: 1.6rem; font-weight: bold; }
+        .o-so small { font-size: 0.7rem; color: #ff9999; text-transform: uppercase; }
+
+        /* Level System */
+        .khung-level { margin-top: 20px; text-align: left; }
+        .cap-do-text { font-size: 1.2rem; color: #eab308; font-weight: bold; text-shadow: 0 0 8px #eab308; }
+        .thanh-exp-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
+        .thanh-exp-core { height: 100%; background: #eab308; width: 0%; box-shadow: 0 0 10px #eab308; transition: width 0.5s; }
+
+        /* --- KHỐI 3D MONOLITH (V.T.V CORE) --- */
+        .khu-vuc-3d { display: flex; justify-content: center; align-items: center; height: 200px; margin-top: 20px; perspective: 800px; }
+        .khoi-lapphuong {
+            width: 100px; height: 100px; position: relative; transform-style: preserve-3d;
+            animation: xoay_3d 10s infinite linear;
         }
-        .the-ngay.hom-nay { border-left-color: var(--mau-neon-xanh); background: rgba(0, 255, 204, 0.05); }
+        .mat-khoi {
+            position: absolute; width: 100px; height: 100px; background: rgba(0, 255, 204, 0.1);
+            border: 2px solid var(--mau-neon-xanh); box-shadow: inset 0 0 20px rgba(0,255,204,0.3);
+            display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: 'Courier New';
+            color: #fff; text-shadow: 0 0 5px var(--mau-neon-xanh); text-align: center; font-size: 0.8rem;
+        }
+        .mat-truoc  { transform: translateZ(50px); }
+        .mat-sau    { transform: rotateY(180deg) translateZ(50px); }
+        .mat-phai   { transform: rotateY(90deg) translateZ(50px); }
+        .mat-trai   { transform: rotateY(-90deg) translateZ(50px); }
+        .mat-tren   { transform: rotateX(90deg) translateZ(50px); }
+        .mat-duoi   { transform: rotateX(-90deg) translateZ(50px); }
         
-        .khung-tieude-ngay { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-        .ten-ngay { font-weight: bold; font-size: 1.1rem; text-transform: uppercase; color: #fff;}
+        @keyframes xoay_3d {
+            from { transform: rotateX(0deg) rotateY(0deg); }
+            to { transform: rotateX(360deg) rotateY(360deg); }
+        }
+
+        /* --- CỘT 2: MA TRẬN NHIỆM VỤ ĐỘNG --- */
+        .ma-tran-tuan { display: flex; flex-direction: column; gap: 15px; max-height: 65vh; overflow-y: auto; padding-right: 5px;}
+        .ma-tran-tuan::-webkit-scrollbar { width: 5px; }
+        .ma-tran-tuan::-webkit-scrollbar-thumb { background: var(--mau-neon-xanh); border-radius: 5px; }
+        .the-ngay { background: rgba(255, 255, 255, 0.03); border-radius: 10px; padding: 15px; border-left: 4px solid #475569; }
+        .the-ngay.hom-nay { border-left-color: var(--mau-neon-xanh); background: rgba(0, 255, 204, 0.06); box-shadow: inset 0 0 15px rgba(0,255,204,0.05);}
+        .khung-tieude-ngay { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .ten-ngay { font-weight: bold; font-size: 1.1rem; color: #fff;}
         .the-ngay.hom-nay .ten-ngay { color: var(--mau-neon-xanh); text-shadow: 0 0 8px var(--mau-neon-xanh); }
-        
-        /* Hiển thị Phần trăm */
-        .phan-tram-hoan-thanh { font-family: 'Courier New', monospace; font-size: 1.2rem; font-weight: bold; color: var(--mau-neon-xanh); text-shadow: 0 0 8px var(--mau-neon-xanh);}
-        .thanh-tien-do-ngay { width: 100%; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin-bottom: 15px; overflow: hidden; }
-        .loi-tien-do { height: 100%; background: var(--mau-neon-xanh); width: 0%; transition: width 0.5s ease-in-out; box-shadow: 0 0 8px var(--mau-neon-xanh);}
-
-        .danh-sach-task { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;}
+        .phan-tram-hoan-thanh { font-family: 'Courier New'; font-weight: bold; color: var(--mau-neon-xanh); }
+        .thanh-tien-do-ngay { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-bottom: 12px; }
+        .loi-tien-do { height: 100%; background: var(--mau-neon-xanh); width: 0%; transition: 0.5s; }
+        .danh-sach-task { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;}
         .o-nhiem-vu {
-            background: rgba(255, 255, 255, 0.05); padding: 6px 14px; border-radius: 20px;
-            font-size: 0.9rem; border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: 0.2s;
+            background: rgba(255, 255, 255, 0.05); padding: 5px 12px; border-radius: 20px;
+            font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: 0.2s;
             display: flex; align-items: center; gap: 8px;
         }
         .o-nhiem-vu:hover { border-color: var(--mau-neon-xanh); }
         .o-nhiem-vu.da-xong { text-decoration: line-through; background: rgba(71, 85, 105, 0.4); color: #64748b; border-color: transparent; }
-        
-        .nut-xoa { color: var(--mau-neon-hong); font-weight: bold; font-size: 1rem; border: none; background: none; cursor: pointer;}
-        .nut-xoa:hover { text-shadow: 0 0 5px var(--mau-neon-hong); }
-
-        /* Khung nhập liệu (Dòng lệnh console) */
-        .khung-nhap-lieu { width: 100%; }
+        .nut-xoa { color: var(--mau-neon-hong); border: none; background: none; cursor: pointer; font-weight: bold;}
         .input-muc-tieu {
-            width: 100%; background: rgba(0,0,0,0.5); border: 1px dashed rgba(0, 255, 204, 0.4);
-            color: var(--mau-neon-xanh); padding: 8px 15px; border-radius: 5px; outline: none;
-            font-family: 'Courier New', monospace; transition: 0.3s;
+            width: 100%; background: rgba(0,0,0,0.5); border: 1px dashed rgba(0, 255, 204, 0.3);
+            color: var(--mau-neon-xanh); padding: 8px; border-radius: 4px; outline: none; font-family: 'Courier New';
         }
-        .input-muc-tieu:focus { border-style: solid; box-shadow: 0 0 10px rgba(0, 255, 204, 0.2); }
 
-        /* --- ĐỒNG HỒ TÙY CHỈNH --- */
-        .khu-vuc-dong-ho { display: flex; flex-direction: column; align-items: center; padding: 20px 10px; }
-        .vong-xoay-nang-luong { position: relative; width: 180px; height: 180px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
-        .vong-xoay-nang-luong svg { width: 180px; height: 180px; transform: rotate(-90deg); }
-        .vong-xoay-nang-luong circle { fill: none; stroke-width: 8; stroke: rgba(255, 255, 255, 0.05); }
-        .vong-xoay-nang-luong .thanh-tai-tai { stroke: var(--mau-neon-xanh); stroke-dasharray: 502; stroke-dashoffset: 0; transition: 1s linear; filter: drop-shadow(0 0 8px var(--mau-neon-xanh)); }
+        /* --- CỘT 3: ĐỒNG HỒ & TERMINAL --- */
+        .khu-vuc-dong-ho { display: flex; flex-direction: column; align-items: center; padding: 15px 10px; }
+        .vong-xoay-nang-luong { position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
+        .vong-xoay-nang-luong svg { width: 150px; height: 150px; transform: rotate(-90deg); }
+        .vong-xoay-nang-luong circle { fill: none; stroke-width: 6; stroke: rgba(255, 255, 255, 0.05); }
+        .vong-xoay-nang-luong .thanh-tai-tai { stroke: var(--mau-neon-xanh); stroke-dasharray: 440; stroke-dashoffset: 0; transition: 1s linear; filter: drop-shadow(0 0 5px var(--mau-neon-xanh)); }
+        .con-so-dong-ho { position: absolute; font-size: 2rem; font-weight: bold; font-family: 'Courier New'; text-shadow: 0 0 8px var(--mau-neon-xanh); }
         
-        .con-so-dong-ho { position: absolute; font-size: 2.2rem; font-weight: bold; font-family: 'Courier New'; text-shadow: 0 0 10px var(--mau-neon-xanh); }
-        
-        .khung-cai-dat-gio { display: flex; align-items: center; gap: 10px; margin-bottom: 15px;}
-        .input-phut { width: 60px; background: transparent; border: 1px solid var(--mau-neon-xanh); color: var(--mau-neon-xanh); text-align: center; padding: 5px; border-radius: 4px; font-weight: bold;}
-        
-        button {
-            background: transparent; color: var(--mau-neon-xanh); border: 1px solid var(--mau-neon-xanh);
-            padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s;
-        }
+        .khung-cai-dat-gio { display: flex; gap: 10px; margin-bottom: 15px;}
+        .input-phut { width: 50px; background: transparent; border: 1px solid var(--mau-neon-xanh); color: var(--mau-neon-xanh); text-align: center; border-radius: 4px;}
+        button { background: transparent; color: var(--mau-neon-xanh); border: 1px solid var(--mau-neon-xanh); padding: 6px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
         button:hover { background: var(--mau-neon-xanh); color: var(--nen-toi); box-shadow: 0 0 10px var(--mau-neon-xanh); }
         button.nut-dung { color: var(--mau-neon-hong); border-color: var(--mau-neon-hong); }
-        button.nut-dung:hover { background: var(--mau-neon-hong); color: #fff; box-shadow: 0 0 10px var(--mau-neon-hong); }
+        
+        .loi-dong-lenh { height: 120px; overflow-y: auto; color: #38bdf8; font-size: 0.85rem; line-height: 1.4; font-family: 'Courier New';}
 
-        /* --- NHẬT KÝ HỆ THỐNG M.I.S --- */
-        .tram-lenh-mis { grid-column: 1 / 3; background: rgba(5, 5, 10, 0.85); font-family: 'Courier New'; border-color: rgba(0, 255, 204, 0.3); }
-        .loi-dong-lenh { height: 100px; overflow-y: auto; color: #38bdf8; font-size: 0.9rem; line-height: 1.5; }
-
-        body.che-do-meo { --mau-neon-xanh: #ff66cc; --mau-neon-hong: #ff007f; }
+        body.che-do-meo { --mau-neon-xanh: #ff66cc; --mau-neon-hong: #ff007f; --mau-canh-bao: #ff3399; }
     </style>
 </head>
 <body>
 
     <header>
         <h1>THỜI KHÓA BIỂU</h1>
-        <p>Nhớ học theo tkb nhé bạn sẽ làm được mà vì nv1 nhé</p>
     </header>
 
     <main class="khung-dieu-hanh">
         
-        <!-- BẢNG ĐIỀU KHIỂN NHIỆM VỤ ĐỘNG -->
-        <section class="the-giao-dien">
+        <!-- CỘT 1: THỐNG KÊ CHIẾN LƯỢC & 3D -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
+            <section class="the-giao-dien khung-dem-nguoc">
+                <div class="tieu-de-the">Mục Tiêu</div>
+                <div style="font-size: 0.9rem; margin-bottom: 10px; color: #cbd5e1;">Kỳ Thi Tốt Nghiệp THPT 2027</div>
+                <div class="chu-dem-nguoc" id="dem-nguoc-thi">...</div>
+                <div class="bang-so-dem-nguoc">
+                    <div class="o-so"><span id="dn-ngay">00</span><small>Ngày</small></div>
+                    <div class="o-so"><span id="dn-gio">00</span><small>Giờ</small></div>
+                    <div class="o-so"><span id="dn-phut">00</span><small>Phút</small></div>
+                    <div class="o-so"><span id="dn-giay">00</span><small>Giây</small></div>
+                </div>
+
+                <div class="khung-level">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Cấp độ Hệ Thống:</span>
+                        <span class="cap-do-text">Lv.<span id="txt-level">1</span></span>
+                    </div>
+                    <div class="thanh-exp-bg"><div class="thanh-exp-core" id="thanh-exp"></div></div>
+                    <div style="text-align: right; font-size: 0.8rem; margin-top: 5px;" id="txt-exp">0/100 EXP</div>
+                </div>
+            </section>
+
+            <section class="the-giao-dien">
+                <div class="tieu-de-the">ƯỚC MƠ</div>
+                <div class="khu-vuc-3d">
+                    <div class="khoi-lapphuong">
+                        <div class="mat-khoi mat-truoc">UIT<br>VISION</div>
+                        <div class="mat-khoi mat-sau">HCMUS<br>SYSTEM</div>
+                        <div class="mat-khoi mat-phai">HCMUTE</div>
+                        <div class="mat-khoi mat-trai">IUH</div>
+                        <div class="mat-khoi mat-tren">HUIT</div>
+                        <div class="mat-khoi mat-duoi">SGU</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- CỘT 2: MA TRẬN NHIỆM VỤ ĐỘNG -->
+        <section class="the-giao-dien" style="display: flex; flex-direction: column;">
             <div class="tieu-de-the">
-                <span>Ma Trận Dữ Liệu Tuần</span>
+                <span>LỊCH HỌC CỤ THỂ</span>
                 <span id="hien-thi-ngay" style="font-size: 0.9rem; color: #64748b;"></span>
             </div>
-            <div class="ma-tran-tuan" id="bo-khung-tuan">
-                <!-- Javascript sẽ tự động vẽ UI ở đây -->
-            </div>
+            <div class="ma-tran-tuan" id="bo-khung-tuan"></div>
         </section>
 
-        <!-- ĐỒNG HỒ & THÔNG SỐ -->
-        <div style="display: flex; flex-direction: column; gap: 25px;">
+        <!-- CỘT 3: ĐỒNG HỒ & TERMINAL -->
+        <div style="display: flex; flex-direction: column; gap: 20px;">
             <section class="the-giao-dien khu-vuc-dong-ho">
-                <div class="tieu-de-the" style="width: 100%;">Đếm ngược giờ</div>
+                <div class="tieu-de-the" style="width: 100%;">Đồng hồ đếm ngược</div>
                 <div class="vong-xoay-nang-luong" id="vong-xoay">
-                    <svg><circle cx="90" cy="90" r="80"></circle><circle class="thanh-tai-tai" id="vong-tien-trinh" cx="90" cy="90" r="80"></circle></svg>
+                    <svg><circle cx="75" cy="75" r="70"></circle><circle class="thanh-tai-tai" id="vong-tien-trinh" cx="75" cy="75" r="70"></circle></svg>
                     <div class="con-so-dong-ho" id="thoi-gian-so">25:00</div>
                 </div>
                 
                 <div class="khung-cai-dat-gio">
-                    <span style="color: #8a99ad; font-size: 0.9rem;">Thiết lập:</span>
-                    <input type="number" id="input-phut" class="input-phut" value="25" min="1" max="120">
-                    <span style="color: #8a99ad; font-size: 0.9rem;">phút</span>
-                    <button onclick="capNhatThoiGianMoi()" style="padding: 4px 10px; font-size: 0.8rem;">Set</button>
+                    <input type="number" id="input-phut" class="input-phut" value="25" min="1">
+                    <button onclick="capNhatThoiGianMoi()">Set</button>
                 </div>
-
                 <div style="display: flex; gap: 10px;">
                     <button id="nut-chay" onclick="kichHoatDongHo()">Khởi Động</button>
                     <button class="nut-dung" onclick="datLaiDongHo()">Hủy</button>
                 </div>
             </section>
-        </div>
 
-        <!-- TERMINAL LOG -->
-        <section class="the-giao-dien tram-lenh-mis">
-            <div class="tieu-de-the" style="color: #38bdf8;">Nhật Ký Quản Trị Hệ Thống</div>
-            <div class="loi-dong-lenh" id="man-hinh-log"></div>
-        </section>
+            <section class="the-giao-dien">
+                <div class="tieu-de-the" style="color: #38bdf8;">LỊCH SỬ HOẠT ĐỘNG</div>
+                <div class="loi-dong-lenh" id="man-hinh-log"></div>
+            </section>
+        </div>
 
     </main>
 
     <script>
-        // --- 1. LÕI DỮ LIỆU ĐỘNG (LOCAL STORAGE) ---
-        // Lấy dữ liệu từ máy tính, nếu chưa có thì khởi tạo mặc định
+        /* =========================================
+           1. HỆ THỐNG LƯU TRỮ VÀ LEVEL TỰ ĐỘNG
+        ========================================= */
         let duLieuHeThong = JSON.parse(localStorage.getItem('mis_database')) || {
-            "Thứ Hai": [], "Thứ Ba": [], "Thứ Tư": [], "Thứ Năm": [], 
-            "Thứ Sáu": [], "Thứ Bảy": [], "Chủ Nhật": []
+            "Thứ Hai": [], "Thứ Ba": [], "Thứ Tư": [], "Thứ Năm": [], "Thứ Sáu": [], "Thứ Bảy": [], "Chủ Nhật": []
         };
-
-        const danhSachNgay = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
-
-        // Tính thứ hiện tại (0 là CN, 1 là T2...) -> quy đổi cho khớp danhSachNgay
-        let hienTai = new Date().getDay();
-        let indexHomNay = hienTai === 0 ? 6 : hienTai - 1;
+        let misLevel = parseInt(localStorage.getItem('mis_level')) || 1;
+        let misExp = parseInt(localStorage.getItem('mis_exp')) || 0;
 
         function luuDuLieu() {
             localStorage.setItem('mis_database', JSON.stringify(duLieuHeThong));
+            localStorage.setItem('mis_level', misLevel);
+            localStorage.setItem('mis_exp', misExp);
         }
 
-        // --- 2. RENDER MA TRẬN TỪ DỮ LIỆU ---
+        function capNhatLevelUI() {
+            document.getElementById('txt-level').innerText = misLevel;
+            document.getElementById('txt-exp').innerText = `${misExp}/100 EXP`;
+            document.getElementById('thanh-exp').style.width = `${misExp}%`;
+        }
+
+        function themKinhNghiem(diem) {
+            misExp += diem;
+            if(misExp >= 100) {
+                misLevel += 1;
+                misExp = misExp - 100;
+                inLogHienThi(`🌟 [LEVEL UP]: Hệ thống M.I.S đã thăng cấp lên Level ${misLevel}! Năng lực quản trị tăng cường.`);
+            }
+            capNhatLevelUI();
+            luuDuLieu();
+        }
+
+        /* =========================================
+           2. RENDER MA TRẬN NHIỆM VỤ
+        ========================================= */
+        const danhSachNgay = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
+        let hienTai = new Date().getDay();
+        let indexHomNay = hienTai === 0 ? 6 : hienTai - 1;
+
         function renderMaTran() {
             const khungTuan = document.getElementById('bo-khung-tuan');
             khungTuan.innerHTML = "";
 
             danhSachNgay.forEach((ngay, index) => {
                 const laHomNay = (index === indexHomNay) ? "hom-nay" : "";
-                const danhSachTask = duLieuHeThong[ngay];
-                
-                // Thuật toán tính phần trăm
-                let tongSo = danhSachTask.length;
-                let daXong = danhSachTask.filter(t => t.done).length;
-                let phanTram = tongSo === 0 ? 0 : Math.round((daXong / tongSo) * 100);
+                const dsTask = duLieuHeThong[ngay];
+                let tong = dsTask.length;
+                let daXong = dsTask.filter(t => t.done).length;
+                let phanTram = tong === 0 ? 0 : Math.round((daXong / tong) * 100);
 
-                let htmlTask = "";
-                danhSachTask.forEach((task, i) => {
-                    const classXong = task.done ? "da-xong" : "";
-                    htmlTask += `
-                        <div class="o-nhiem-vu ${classXong}" onclick="doiTrangThai('${ngay}', ${i})">
-                            <span>${task.ten}</span>
-                            <button class="nut-xoa" onclick="xoaTask(event, '${ngay}', ${i})">×</button>
-                        </div>
-                    `;
-                });
+                let htmlTask = dsTask.map((task, i) => `
+                    <div class="o-nhiem-vu ${task.done ? 'da-xong' : ''}" onclick="doiTrangThai('${ngay}', ${i})">
+                        <span>${task.ten}</span>
+                        <button class="nut-xoa" onclick="xoaTask(event, '${ngay}', ${i})">×</button>
+                    </div>
+                `).join('');
 
-                const theNgay = `
+                khungTuan.innerHTML += `
                     <div class="the-ngay ${laHomNay}">
                         <div class="khung-tieude-ngay">
                             <span class="ten-ngay">${ngay}</span>
                             <span class="phan-tram-hoan-thanh">[ ${phanTram}% ]</span>
                         </div>
-                        <div class="thanh-tien-do-ngay">
-                            <div class="loi-tien-do" style="width: ${phanTram}%;"></div>
-                        </div>
+                        <div class="thanh-tien-do-ngay"><div class="loi-tien-do" style="width: ${phanTram}%;"></div></div>
                         <div class="danh-sach-task">${htmlTask}</div>
-                        <div class="khung-nhap-lieu">
-                            <input type="text" class="input-muc-tieu" placeholder="> Nhập mục tiêu mới và ấn Enter..." 
-                                   onkeypress="xuLyNhapTask(event, '${ngay}')">
-                        </div>
+                        <input type="text" class="input-muc-tieu" placeholder="> Gõ lệnh thêm task & Enter..." onkeypress="xuLyNhapTask(event, '${ngay}')">
                     </div>
                 `;
-                khungTuan.innerHTML += theNgay;
             });
-
-            // Ghi ngày hiện tại
-            const options = { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' };
-            document.getElementById('hien-thi-ngay').innerText = new Date().toLocaleDateString('vi-VN', options);
+            document.getElementById('hien-thi-ngay').innerText = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' });
         }
 
-        // --- 3. CÁC HÀM XỬ LÝ DỮ LIỆU (CRUD) ---
-        function xuLyNhapTask(event, ngay) {
-            if (event.key === "Enter") {
-                const text = event.target.value.trim();
-                if (text !== "") {
-                    duLieuHeThong[ngay].push({ ten: text, done: false });
-                    luuDuLieu();
-                    renderMaTran();
-                    inLogHienThi(`[DATABASE]: Đã ghi nhận mục tiêu mới: "${text}" vào ${ngay}.`);
-                }
+        function xuLyNhapTask(e, ngay) {
+            if (e.key === "Enter" && e.target.value.trim() !== "") {
+                duLieuHeThong[ngay].push({ ten: e.target.value.trim(), done: false });
+                luuDuLieu(); renderMaTran();
+                inLogHienThi(`[GHI NHẬN]: Đã nạp mục tiêu mới vào khu vực ${ngay}.`);
             }
         }
 
         function doiTrangThai(ngay, viTri) {
             duLieuHeThong[ngay][viTri].done = !duLieuHeThong[ngay][viTri].done;
-            luuDuLieu();
-            renderMaTran();
-            
             if(duLieuHeThong[ngay][viTri].done) {
-                inLogHienThi(`[AI_METRICS]: Xác nhận hoàn thành: "${duLieuHeThong[ngay][viTri].ten}". Điểm V.T.V tăng!`);
+                inLogHienThi(`[HOÀN THÀNH]: Lệnh "${duLieuHeThong[ngay][viTri].ten}" đã thực thi. +10 EXP.`);
+                themKinhNghiem(10);
             }
+            luuDuLieu(); renderMaTran();
         }
 
-        function xoaTask(event, ngay, viTri) {
-            event.stopPropagation(); // Ngăn click nhầm vào đổi trạng thái
-            const tenBixoa = duLieuHeThong[ngay][viTri].ten;
+        function xoaTask(e, ngay, viTri) {
+            e.stopPropagation();
             duLieuHeThong[ngay].splice(viTri, 1);
-            luuDuLieu();
-            renderMaTran();
-            inLogHienThi(`[HỆ THỐNG]: Đã hủy bỏ quy trình: "${tenBixoa}".`);
+            luuDuLieu(); renderMaTran();
         }
 
-        // --- 4. ĐỒNG HỒ ĐẾM NGƯỢC TÙY CHỈNH ---
-        let thoiGianGoc = 25 * 60; // Tính bằng giây
-        let thoiGianConLai = thoiGianGoc;
-        let boDemChay = null;
-        const chuVi = 2 * Math.PI * 80;
+        /* =========================================
+           3. ĐẾM NGƯỢC THI TỐT NGHIỆP 2027
+        ========================================= */
+        const ngayThi = new Date("2027-06-25T00:00:00").getTime(); // Mốc dự kiến
+        setInterval(() => {
+            const bayGio = new Date().getTime();
+            const khoangCach = ngayThi - bayGio;
+
+            if (khoangCach > 0) {
+                document.getElementById('dn-ngay').innerText = Math.floor(khoangCach / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
+                document.getElementById('dn-gio').innerText = Math.floor((khoangCach % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
+                document.getElementById('dn-phut').innerText = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
+                document.getElementById('dn-giay').innerText = Math.floor((khoangCach % (1000 * 60)) / 1000).toString().padStart(2, '0');
+            } else {
+                document.getElementById('dem-nguoc-thi').innerText = "THỜI KHẮC SINH TỬ ĐÃ ĐIỂM!";
+            }
+        }, 1000);
+
+        /* =========================================
+           4. ĐỒNG HỒ POMODORO (ANTI-SLEEP TIMESTAMP)
+        ========================================= */
+        let thoiGianGoc = 25 * 60; let thoiGianConLai = thoiGianGoc;
+        let boDemChay = null; let thoiDiemKetThuc = null;
+        const chuVi = 2 * Math.PI * 70; // Bán kính 70 cho vừa layout mới
 
         function capNhatThoiGianMoi() {
-            if(boDemChay !== null) return alert("Vui lòng ấn Hủy đồng hồ đang chạy trước khi Set giờ mới!");
-            let phutMoi = document.getElementById('input-phut').value;
-            if(phutMoi > 0) {
-                thoiGianGoc = phutMoi * 60;
-                datLaiDongHo();
-                inLogHienThi(`[HỆ THỐNG]: Cấu hình lại lõi năng lượng sang mức ${phutMoi} phút.`);
-            }
+            if(boDemChay) return alert("Hủy đồng hồ trước khi cài lại!");
+            let phut = document.getElementById('input-phut').value;
+            if(phut > 0) { thoiGianGoc = phut * 60; datLaiDongHo(); inLogHienThi(`[HỆ THỐNG]: Set bộ đếm: ${phut} phút.`); }
         }
 
         function capNhatUI_DongHo() {
-            const p = Math.floor(thoiGianConLai / 60).toString().padStart(2, '0');
-            const g = (thoiGianConLai % 60).toString().padStart(2, '0');
+            let p = Math.floor(thoiGianConLai / 60).toString().padStart(2, '0');
+            let g = (thoiGianConLai % 60).toString().padStart(2, '0');
             document.getElementById('thoi-gian-so').innerText = `${p}:${g}`;
-            
-            const phanTram = thoiGianConLai / thoiGianGoc;
-            document.getElementById('vong-tien-trinh').style.strokeDashoffset = chuVi - (phanTram * chuVi);
+            document.getElementById('vong-tien-trinh').style.strokeDashoffset = chuVi - ((thoiGianConLai / thoiGianGoc) * chuVi);
         }
 
         function kichHoatDongHo() {
             const nut = document.getElementById('nut-chay');
             if (!boDemChay) {
                 nut.innerText = "Tạm Dừng";
-                inLogHienThi("[HỆ THỐNG]: Kích hoạt trạng thái tập trung sâu.");
+                thoiDiemKetThuc = Date.now() + (thoiGianConLai * 1000);
+                inLogHienThi("[BÁO ĐỘNG]: Khởi động Lò Phản Ứng. Thuật toán thời gian thực ON.");
+                
                 boDemChay = setInterval(() => {
-                    if (thoiGianConLai > 0) {
-                        thoiGianConLai--; capNhatUI_DongHo();
-                    } else {
+                    thoiGianConLai = Math.round((thoiDiemKetThuc - Date.now()) / 1000);
+                    if (thoiGianConLai > 0) { capNhatUI_DongHo(); } 
+                    else {
+                        thoiGianConLai = 0; capNhatUI_DongHo();
                         clearInterval(boDemChay); boDemChay = null;
                         nut.innerText = "Khởi Động";
-                        alert("Hoàn thành mục tiêu thời gian!"); datLaiDongHo();
+                        alert("Hoàn thành mục tiêu cày cuốc! +20 EXP"); 
+                        themKinhNghiem(20); datLaiDongHo();
                     }
                 }, 1000);
             } else {
@@ -317,7 +374,9 @@
             capNhatUI_DongHo();
         }
 
-        // --- 5. LOG SYSTEM & EASTER EGG ---
+        /* =========================================
+           5. NHẬT KÝ MIS & EASTER EGG
+        ========================================= */
         function inLogHienThi(text) {
             const mh = document.getElementById('man-hinh-log');
             mh.innerHTML += `<div>> [${new Date().toLocaleTimeString()}] ${text}</div>`;
@@ -329,15 +388,14 @@
             lsgp = (lsgp + e.key.toLowerCase()).slice(-5);
             if(lsgp.includes("meo")) {
                 document.body.classList.toggle('che-do-meo');
-                inLogHienThi("💖 [ĐẶC BIỆT]: Chuyển đổi giao diện hệ thống sang mã Mèo!");
+                inLogHienThi("💖 [TRUY CẬP ẨN]: Kích hoạt mã hệ thống đặc biệt. Giao diện đổi sang Neon Pink.");
             }
         });
 
-        // Chạy ngay khi mở web
+        // INIT
         window.onload = () => {
-            renderMaTran();
-            capNhatUI_DongHo();
-            inLogHienThi("[KHỞI ĐỘNG]: Hệ thống M.I.S sẵn sàng nhận cấu trúc phân tích dữ liệu.");
+            renderMaTran(); capNhatLevelUI(); capNhatUI_DongHo();
+            inLogHienThi("[KHỞI ĐỘNG]: Hệ thống M.I.S V.T.V Core đã kích hoạt toàn diện. Sẵn sàng cho kỳ thi 2027!");
         };
     </script>
 </body>
