@@ -553,6 +553,18 @@
                     this.logs.unshift({ action, detail, amount, type });
                     if (this.logs.length > 30) this.logs.pop();
                 },
+                // Thêm hàm này vào trong methods:
+autoOpenBowl() {
+    this.bowlState.show = false; // Ẩn bát đi
+    this.phase = 'results'; // Chuyển sang trạng thái xem kết quả
+    this.executeGamesRoll(); // Gọi hàm xử lý kết quả
+    
+    // Sau 5 giây xem kết quả thì reset lại chu trình mới
+    setTimeout(() => {
+        this.phase = 'betting';
+        this.timer = 50;
+    }, 5000);
+},
                 
                 // LOGIC KÉO THẢ BÁT (NẶN)
                 startDrag(e) {
@@ -560,7 +572,14 @@
                     this.bowlState.startX = e.clientX || (e.touches && e.touches[0].clientX);
                     this.bowlState.startY = e.clientY || (e.touches && e.touches[0].clientY);
                 },
-                doDrag(e) {
+startDrag(e) {
+    // THÊM ĐOẠN NÀY ĐỂ KHÓA BÁT
+    if (this.phase !== 'peeking') {
+        this.showToast("Chưa đến giờ nặn bát. Vui lòng chờ đến 15s cuối!", "error");
+        return; 
+    }
+
+    this.bowlState.isDragging = true;                    
                     if (!this.bowlState.isDragging) return;
                     e.preventDefault(); // Tránh scroll màn hình trên mobile
                     const currentX = e.clientX || (e.touches && e.touches[0].clientX);
@@ -574,6 +593,7 @@
                 resetBowl() {
                     this.bowlState = { show: true, isDragging: false, startX: 0, startY: 0, x: 0, y: 0 };
                 },
+                
 
                 // LOGIC CSS GRID CHẤM XÚC XẮC
                 renderDice(val) {
@@ -592,20 +612,27 @@
                 },
 
                 // LOOP ĐỒNG HỒ TỔNG THỂ
-                startGlobalTimerLoop() {
-                    setInterval(() => {
-                        this.timer--;
-                        if (this.timer < 0) {
-                            this.executeGamesRoll();
-                            this.timer = 30; // Reset vòng quay
-                        }
-                    }, 1000);
-                },
+                // Sửa tại hàm startGlobalTimerLoop
+startGlobalTimerLoop() {
+    setInterval(() => {
+        this.timer--;
 
-                bet(gameKey, choice) {
-                    if(!this.gameBets[gameKey].amount) this.gameBets[gameKey].amount = 10000; // Default test
-                    this.gameBets[gameKey].choice = choice;
-                },
+        if (this.phase === 'betting') {
+            if (this.timer <= 0) {
+                // Hết 50s đặt cược -> Chuyển sang nặn bát
+                this.phase = 'peeking';
+                this.timer = 15; // Set 15s để nặn
+                this.bowlState.show = true; // Đảm bảo bát đang đóng
+                this.showToast("Đã hết giờ cược! Mời VIP nặn bát...", "info");
+            }
+        } else if (this.phase === 'peeking') {
+            if (this.timer <= 0) {
+                // Hết 15s nặn -> Tự động mở
+                this.autoOpenBowl();
+            }
+        }
+    }, 1000);
+},
 
                 // THỰC THI TOÀN BỘ 6 GAME
                 executeGamesRoll() {
@@ -725,6 +752,15 @@
                         this.pushLog("Thua Phiên Cược", logDesc, betObj.amount, "minus");
                     }
                 },
+                // Trong hàm data()
+data() {
+    return {
+        // ... các biến cũ
+        timer: 50, // Bắt đầu ở 50s đặt cược
+        phase: 'betting', // 'betting' hoặc 'peeking'
+        // ...
+    }
+}
 
                 // (Các tính năng Nạp, Rút, Code, CSKH, Chuyển lộc được giữ nguyên 100% logic cũ)
                 handleTransfer() {
