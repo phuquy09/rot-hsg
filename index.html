@@ -3,400 +3,782 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TRẠM CHỈ HUY M.I.S - V.T.V CORE</title>
+    <title> New789 ANTV - ADVANCED CASINO ENGINE</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* --- GIAO DIỆN CYBERPUNK GLASSMORPHISM TỐI ƯU --- */
-        :root {
-            --nen-toi: #060713; --mau-neon-xanh: #00ffcc;
-            --mau-neon-hong: #ff007f; --mau-canh-bao: #ff3333;
-            --mau-kinh-mo: rgba(15, 22, 42, 0.7); --vien-neon: rgba(0, 255, 204, 0.15);
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
-
         body {
-            background-color: var(--nen-toi); color: #ffffff; min-height: 100vh;
-            display: flex; flex-direction: column; align-items: center; padding: 20px;
-            background-image: linear-gradient(rgba(0, 255, 204, 0.03) 1px, transparent 1px),
-                              linear-gradient(90deg, rgba(0, 255, 204, 0.03) 1px, transparent 1px);
-            background-size: 30px 30px; overflow-x: hidden;
+            background-color: #030308;
+            color: #f1f1f7;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            user-select: none; /* Tránh bôi đen text khi kéo bát */
         }
+        .gold-gradient-text {
+            background: linear-gradient(135deg, #fff 0%, #ffd700 50%, #b8860b 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .neon-border-gold {
+            border: 1px solid rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.05);
+        }
+        .neon-border-gold:hover {
+            border-color: #ffd700;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.2);
+        }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: #030308; }
+        ::-webkit-scrollbar-thumb { background: #b8860b; border-radius: 9px; }
 
-        header { text-align: center; margin-bottom: 20px; }
-        header h1 { font-size: 2.2rem; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 15px var(--mau-neon-xanh); }
+        /* ================= BÁT ĐĨA VÀ VẬT PHẨM CHÂN THỰC ================= */
+        .plate-bg {
+            background: radial-gradient(circle, #2e7d32 0%, #1b5e20 70%);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.6), 0 10px 20px rgba(0,0,0,0.5);
+            border: 10px solid #5d4037;
+        }
+        .plate-inner {
+            background: #f5f5f5;
+            border-radius: 50%;
+            border: 6px solid #d7ccc8;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.3);
+            width: 100%; height: 100%;
+        }
+        .bowl-bg {
+            background: radial-gradient(circle at 30% 30%, #e0e0e0 0%, #9e9e9e 60%, #424242 100%);
+            box-shadow: 0 12px 24px rgba(0,0,0,0.7);
+            border: 4px solid #757575;
+            cursor: grab;
+            transition: box-shadow 0.2s;
+        }
+        .bowl-bg:active { cursor: grabbing; box-shadow: 0 15px 30px rgba(0,0,0,0.9); }
         
-        /* Layout phân chia 3 cột để chứa nhiều tính năng */
-        .khung-dieu-hanh { 
-            display: grid; 
-            grid-template-columns: 1fr 1.5fr 1fr; 
-            gap: 20px; width: 100%; max-width: 1400px; 
+        /* Cấu trúc Xúc Xắc Chấm */
+        .dice-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            width: 40px; height: 40px;
+            background: #fff;
+            border-radius: 8px;
+            padding: 4px;
+            box-shadow: inset 0 0 5px rgba(0,0,0,0.3), 2px 4px 6px rgba(0,0,0,0.4);
+        }
+        .dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            margin: auto;
+        }
+        /* Quân Vị Xóc Đĩa */
+        .vi-token {
+            width: 36px; height: 36px;
+            border-radius: 50%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+        }
+        .vi-token.red { background: #e53935; border: 3px solid #b71c1c; }
+        .vi-token.white { background: #ffffff; border: 3px solid #b0bec5; }
+        /* Linh Vật Bầu Cua */
+        .mascot-token {
+            width: 42px; height: 42px;
+            background: #fff; border-radius: 8px;
+            display: flex; justify-content: center; align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3); border: 2px solid #ffb300; font-size: 24px;
         }
 
-        .the-giao-dien {
-            background: var(--mau-kinh-mo); backdrop-filter: blur(15px); border: 1px solid var(--vien-neon);
-            border-radius: 16px; padding: 20px; box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        /* ================= BÁT QUÁI TRẬN (KINH DỊCH) ================= */
+        .bagua-compass {
+            background: radial-gradient(circle, #2a0845 0%, #6441A5 100%);
+            border: 4px solid #ffd700;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.3);
+            position: relative;
+        }
+        .yin-yang {
+            width: 60px; height: 60px;
+            background: linear-gradient(to right, #fff 50%, #000 50%);
+            border-radius: 50%;
+            border: 2px solid #fff;
+            position: relative;
+            animation: spin 4s linear infinite;
+        }
+        .yin-yang::before, .yin-yang::after {
+            content: ""; position: absolute; width: 30px; height: 30px; border-radius: 50%; left: 15px;
+        }
+        .yin-yang::before { top: 0; background: #fff; border: 8px solid #000; box-sizing: border-box; }
+        .yin-yang::after { bottom: 0; background: #000; border: 8px solid #fff; box-sizing: border-box; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+        .ancient-coin {
+            width: 35px; height: 35px; border-radius: 50%;
+            background: radial-gradient(circle, #ffd700, #b8860b);
+            border: 2px solid #fff; display: flex; align-items: center; justify-content: center;
+            font-size: 10px; font-weight: bold; color: #333;
+        }
+        .door-highlight {
+            box-shadow: inset 0 0 20px #00ffff, 0 0 20px #00ffff !important;
+            border-color: #00ffff !important;
+        }
+        .laser-beam {
+            position: absolute; top: 50%; left: 50%;
+            width: 4px; height: 120px; background: #00ffff;
+            transform-origin: top center; z-index: 20;
+            box-shadow: 0 0 15px #00ffff;
+            transition: all 0.5s ease-out;
         }
 
-        .tieu-de-the {
-            font-size: 1.1rem; text-transform: uppercase; letter-spacing: 2px;
-            margin-bottom: 15px; color: var(--mau-neon-xanh);
-            border-bottom: 1px dashed rgba(0, 255, 204, 0.3); padding-bottom: 8px;
-            display: flex; justify-content: space-between; align-items: center;
+        /* ================= HIỆU ỨNG CƯỢC TỐI MÀU GIAO DIỆN ================= */
+        .bet-active-overlay {
+            filter: brightness(0.4);
+            border-color: #ffd700 !important;
+            transition: all 0.2s;
         }
-
-        /* --- CỘT 1: ĐẾM NGƯỢC THI TỐT NGHIỆP & LEVEL HỆ THỐNG --- */
-        .khung-dem-nguoc { text-align: center; padding: 20px 10px; }
-        .chu-dem-nguoc { font-size: 1.5rem; font-family: 'Courier New'; color: var(--mau-canh-bao); text-shadow: 0 0 10px var(--mau-canh-bao); margin-bottom: 15px; font-weight: bold;}
-        .bang-so-dem-nguoc { display: flex; justify-content: center; gap: 10px; }
-        .o-so { background: rgba(255,51,51,0.1); border: 1px solid var(--mau-canh-bao); padding: 10px; border-radius: 8px; width: 60px; }
-        .o-so span { display: block; font-size: 1.6rem; font-weight: bold; }
-        .o-so small { font-size: 0.7rem; color: #ff9999; text-transform: uppercase; }
-
-        /* Level System */
-        .khung-level { margin-top: 20px; text-align: left; }
-        .cap-do-text { font-size: 1.2rem; color: #eab308; font-weight: bold; text-shadow: 0 0 8px #eab308; }
-        .thanh-exp-bg { width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-top: 5px; overflow: hidden; }
-        .thanh-exp-core { height: 100%; background: #eab308; width: 0%; box-shadow: 0 0 10px #eab308; transition: width 0.5s; }
-
-        /* --- KHỐI 3D MONOLITH (V.T.V CORE) --- */
-        .khu-vuc-3d { display: flex; justify-content: center; align-items: center; height: 200px; margin-top: 20px; perspective: 800px; }
-        .khoi-lapphuong {
-            width: 100px; height: 100px; position: relative; transform-style: preserve-3d;
-            animation: xoay_3d 10s infinite linear;
+        .bet-amount-tag {
+            position: absolute;
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: rgba(255, 215, 0, 0.95); color: #000;
+            padding: 4px 12px; border-radius: 20px; font-weight: 900; font-size: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.8);
+            z-index: 10; pointer-events: none;
         }
-        .mat-khoi {
-            position: absolute; width: 100px; height: 100px; background: rgba(0, 255, 204, 0.1);
-            border: 2px solid var(--mau-neon-xanh); box-shadow: inset 0 0 20px rgba(0,255,204,0.3);
-            display: flex; justify-content: center; align-items: center; font-weight: bold; font-family: 'Courier New';
-            color: #fff; text-shadow: 0 0 5px var(--mau-neon-xanh); text-align: center; font-size: 0.8rem;
-        }
-        .mat-truoc  { transform: translateZ(50px); }
-        .mat-sau    { transform: rotateY(180deg) translateZ(50px); }
-        .mat-phai   { transform: rotateY(90deg) translateZ(50px); }
-        .mat-trai   { transform: rotateY(-90deg) translateZ(50px); }
-        .mat-tren   { transform: rotateX(90deg) translateZ(50px); }
-        .mat-duoi   { transform: rotateX(-90deg) translateZ(50px); }
-        
-        @keyframes xoay_3d {
-            from { transform: rotateX(0deg) rotateY(0deg); }
-            to { transform: rotateX(360deg) rotateY(360deg); }
-        }
-
-        /* --- CỘT 2: MA TRẬN NHIỆM VỤ ĐỘNG --- */
-        .ma-tran-tuan { display: flex; flex-direction: column; gap: 15px; max-height: 65vh; overflow-y: auto; padding-right: 5px;}
-        .ma-tran-tuan::-webkit-scrollbar { width: 5px; }
-        .ma-tran-tuan::-webkit-scrollbar-thumb { background: var(--mau-neon-xanh); border-radius: 5px; }
-        .the-ngay { background: rgba(255, 255, 255, 0.03); border-radius: 10px; padding: 15px; border-left: 4px solid #475569; }
-        .the-ngay.hom-nay { border-left-color: var(--mau-neon-xanh); background: rgba(0, 255, 204, 0.06); box-shadow: inset 0 0 15px rgba(0,255,204,0.05);}
-        .khung-tieude-ngay { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .ten-ngay { font-weight: bold; font-size: 1.1rem; color: #fff;}
-        .the-ngay.hom-nay .ten-ngay { color: var(--mau-neon-xanh); text-shadow: 0 0 8px var(--mau-neon-xanh); }
-        .phan-tram-hoan-thanh { font-family: 'Courier New'; font-weight: bold; color: var(--mau-neon-xanh); }
-        .thanh-tien-do-ngay { width: 100%; height: 3px; background: rgba(255,255,255,0.1); margin-bottom: 12px; }
-        .loi-tien-do { height: 100%; background: var(--mau-neon-xanh); width: 0%; transition: 0.5s; }
-        .danh-sach-task { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 10px;}
-        .o-nhiem-vu {
-            background: rgba(255, 255, 255, 0.05); padding: 5px 12px; border-radius: 20px;
-            font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.1); cursor: pointer; transition: 0.2s;
-            display: flex; align-items: center; gap: 8px;
-        }
-        .o-nhiem-vu:hover { border-color: var(--mau-neon-xanh); }
-        .o-nhiem-vu.da-xong { text-decoration: line-through; background: rgba(71, 85, 105, 0.4); color: #64748b; border-color: transparent; }
-        .nut-xoa { color: var(--mau-neon-hong); border: none; background: none; cursor: pointer; font-weight: bold;}
-        .input-muc-tieu {
-            width: 100%; background: rgba(0,0,0,0.5); border: 1px dashed rgba(0, 255, 204, 0.3);
-            color: var(--mau-neon-xanh); padding: 8px; border-radius: 4px; outline: none; font-family: 'Courier New';
-        }
-
-        /* --- CỘT 3: ĐỒNG HỒ & TERMINAL --- */
-        .khu-vuc-dong-ho { display: flex; flex-direction: column; align-items: center; padding: 15px 10px; }
-        .vong-xoay-nang-luong { position: relative; width: 150px; height: 150px; display: flex; justify-content: center; align-items: center; margin-bottom: 15px; }
-        .vong-xoay-nang-luong svg { width: 150px; height: 150px; transform: rotate(-90deg); }
-        .vong-xoay-nang-luong circle { fill: none; stroke-width: 6; stroke: rgba(255, 255, 255, 0.05); }
-        .vong-xoay-nang-luong .thanh-tai-tai { stroke: var(--mau-neon-xanh); stroke-dasharray: 440; stroke-dashoffset: 0; transition: 1s linear; filter: drop-shadow(0 0 5px var(--mau-neon-xanh)); }
-        .con-so-dong-ho { position: absolute; font-size: 2rem; font-weight: bold; font-family: 'Courier New'; text-shadow: 0 0 8px var(--mau-neon-xanh); }
-        
-        .khung-cai-dat-gio { display: flex; gap: 10px; margin-bottom: 15px;}
-        .input-phut { width: 50px; background: transparent; border: 1px solid var(--mau-neon-xanh); color: var(--mau-neon-xanh); text-align: center; border-radius: 4px;}
-        button { background: transparent; color: var(--mau-neon-xanh); border: 1px solid var(--mau-neon-xanh); padding: 6px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; text-transform: uppercase; transition: 0.3s; }
-        button:hover { background: var(--mau-neon-xanh); color: var(--nen-toi); box-shadow: 0 0 10px var(--mau-neon-xanh); }
-        button.nut-dung { color: var(--mau-neon-hong); border-color: var(--mau-neon-hong); }
-        
-        .loi-dong-lenh { height: 120px; overflow-y: auto; color: #38bdf8; font-size: 0.85rem; line-height: 1.4; font-family: 'Courier New';}
-
-        body.che-do-meo { --mau-neon-xanh: #ff66cc; --mau-neon-hong: #ff007f; --mau-canh-bao: #ff3399; }
     </style>
 </head>
-<body>
+<body class="overflow-x-hidden min-h-screen">
 
-    <header>
-        <h1>THỜI KHÓA BIỂU</h1>
-    </header>
+    <div id="app" class="relative min-h-screen pb-12">
+        <div class="w-full bg-black text-yellow-400 text-xs py-2 border-b border-yellow-600/30 overflow-hidden whitespace-nowrap">
+            <div class="inline-block animate-[marquee_35s_linear_infinite]">
+                ⚠️ THÔNG BÁO VẬN HÀNH: Chào mừng siêu cấp VIP hoangtocdo76 đăng nhập hệ thống New789 ANTV. Kích hoạt thuật toán nặn bát vật lý 3D, la bàn bói toán Kinh Dịch. Chúc đại gia nổ hũ vang dội! ⚠️
+            </div>
+        </div>
+        <style> @keyframes marquee { 0% { transform: translateX(100vw); } 100% { transform: translateX(-100%); } } </style>
 
-    <main class="khung-dieu-hanh">
-        
-        <!-- CỘT 1: THỐNG KÊ CHIẾN LƯỢC & 3D -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <section class="the-giao-dien khung-dem-nguoc">
-                <div class="tieu-de-the">Mục Tiêu</div>
-                <div style="font-size: 0.9rem; margin-bottom: 10px; color: #cbd5e1;">Kỳ Thi Tốt Nghiệp THPT 2027</div>
-                <div class="chu-dem-nguoc" id="dem-nguoc-thi">...</div>
-                <div class="bang-so-dem-nguoc">
-                    <div class="o-so"><span id="dn-ngay">00</span><small>Ngày</small></div>
-                    <div class="o-so"><span id="dn-gio">00</span><small>Giờ</small></div>
-                    <div class="o-so"><span id="dn-phut">00</span><small>Phút</small></div>
-                    <div class="o-so"><span id="dn-giay">00</span><small>Giây</small></div>
+        <header class="sticky top-0 z-50 bg-[#080810]/95 backdrop-blur-md border-b-2 border-yellow-500 py-4 px-6 flex justify-between items-center shadow-2xl">
+            <div class="flex items-center gap-4">
+                <h1 class="text-3xl font-black italic tracking-widest gold-gradient-text drop-shadow-[0_0_10px_rgba(255,215,0,0.3)]">NEW789 ANTV</h1>
+                <span class="bg-gradient-to-r from-gray-900 to-amber-950 text-yellow-400 border border-yellow-400 text-xs font-bold px-3 py-1 rounded-full shadow-inner">
+                    💎 VIP INTERACTIVE: hoangtocdo76
+                </span>
+            </div>
+            
+            <div class="flex items-center gap-3">
+                <button @click="openModal('nap')" class="bg-transparent hover:bg-yellow-500 text-yellow-400 hover:text-black border border-yellow-500 font-bold text-xs uppercase px-4 py-2.5 rounded-lg transition-all transform hover:-translate-y-0.5">📥 Nạp tiền</button>
+                <button @click="openModal('rut')" class="bg-transparent hover:bg-yellow-500 text-yellow-400 hover:text-black border border-yellow-500 font-bold text-xs uppercase px-4 py-2.5 rounded-lg transition-all transform hover:-translate-y-0.5">📤 Rút tiền</button>
+                <button @click="openModal('code')" class="bg-transparent hover:bg-yellow-500 text-yellow-400 hover:text-black border border-yellow-500 font-bold text-xs uppercase px-4 py-2.5 rounded-lg transition-all transform hover:-translate-y-0.5">🎁 Giftcode</button>
+                <button @click="openModal('cskh')" class="bg-transparent hover:bg-cyan-500 text-cyan-400 hover:text-black border border-cyan-400 font-bold text-xs uppercase px-4 py-2.5 rounded-lg transition-all transform hover:-translate-y-0.5">🎧 Tổng Đài</button>
+                
+                <div class="bg-black/80 border border-yellow-600/50 rounded-xl px-5 py-2 flex items-center gap-2 shadow-inner">
+                    <span class="text-xl">💰</span>
+                    <span class="text-white font-black text-xl tracking-wide">{{ formatMoney(balance) }}</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="max-w-[1600px] mx-auto mt-8 px-4 grid grid-cols-1 lg:grid-cols-4 gap-6">
+            
+            <div class="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+                <div @click="openModal('game-tx')" class="bg-[#111122]/90 rounded-2xl p-6 text-center neon-border-gold transition-all cursor-pointer relative group">
+                    <span class="text-5xl block mb-3 group-hover:scale-110 transition-transform">🎲</span>
+                    <h3 class="text-lg font-bold uppercase text-white tracking-wide">Tài Xỉu Mini</h3>
+                    <p class="text-xs text-gray-400 mt-1">Nặn bát xúc xắc chấm vật lý</p>
+                    <div class="mt-3 text-red-500 font-mono font-bold bg-black/40 inline-block px-3 py-1 rounded-md">Phiên hồi: {{ timer }}s</div>
                 </div>
 
-                <div class="khung-level">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Cấp độ Hệ Thống:</span>
-                        <span class="cap-do-text">Lv.<span id="txt-level">1</span></span>
+                <div @click="openModal('game-md5')" class="bg-[#111122]/90 rounded-2xl p-6 text-center neon-border-gold transition-all cursor-pointer relative group">
+                    <span class="text-5xl block mb-3 group-hover:scale-110 transition-transform">🛡️</span>
+                    <h3 class="text-lg font-bold uppercase text-white tracking-wide">Tài Xỉu MD5</h3>
+                    <p class="text-xs text-gray-400 mt-1">Chuỗi mã hóa băm bảo mật</p>
+                    <div class="mt-3 text-cyan-400 font-mono font-bold bg-black/40 inline-block px-3 py-1 rounded-md">Đồng bộ: {{ timer }}s</div>
+                </div>
+
+                <div @click="openModal('game-xd')" class="bg-[#111122]/90 rounded-2xl p-6 text-center neon-border-gold transition-all cursor-pointer relative group">
+                    <span class="text-5xl block mb-3 group-hover:scale-110 transition-transform">📀</span>
+                    <h3 class="text-lg font-bold uppercase text-white tracking-wide">Xóc Đĩa Hoàng Gia</h3>
+                    <p class="text-xs text-gray-400 mt-1">Nặn vị đỏ trắng chuẩn casino</p>
+                    <div class="mt-3 text-purple-400 font-mono font-bold bg-black/40 inline-block px-3 py-1 rounded-md">Mở bát: {{ timer }}s</div>
+                </div>
+
+                <div @click="openModal('game-bc')" class="bg-[#111122]/90 rounded-2xl p-6 text-center neon-border-gold transition-all cursor-pointer relative group">
+                    <span class="text-5xl block mb-3 group-hover:scale-110 transition-transform">🦀</span>
+                    <h3 class="text-lg font-bold uppercase text-white tracking-wide">Bầu Cua Linh Vật</h3>
+                    <p class="text-xs text-gray-400 mt-1">Nặn linh vật dân gian</p>
+                    <div class="mt-3 text-green-400 font-mono font-bold bg-black/40 inline-block px-3 py-1 rounded-md">Lắc tụ: {{ timer }}s</div>
+                </div>
+
+                <div @click="openModal('game-bq')" class="bg-[#111122]/90 rounded-2xl p-6 text-center neon-border-gold transition-all cursor-pointer relative group">
+                    <span class="text-5xl block mb-3 group-hover:scale-110 transition-transform">☯️</span>
+                    <h3 class="text-lg font-bold uppercase text-white tracking-wide">Bát Quái Trận</h3>
+                    <p class="text-xs text-gray-400 mt-1">La bàn bói toán Kinh Dịch x8</p>
+                    <div class="mt-3 text-amber-500 font-mono font-bold bg-black/40 inline-block px-3 py-1 rounded-md">Luân hồi: {{ timer }}s</div>
+                </div>
+
+                <div @click="openModal('game-dt')" class="bg-[#111122]/90 rounded-2xl p-6 text-center neon-border-gold transition-all cursor-pointer relative group">
+                    <span class="text-5xl block mb-3 group-hover:scale-110 transition-transform">⚔️</span>
+                    <h3 class="text-lg font-bold uppercase text-white tracking-wide">Đấu Trường Sinh Tử</h3>
+                    <p class="text-xs text-gray-400 mt-1">Gladiator đại chiến có Battle Log</p>
+                    <div class="mt-3 text-orange-500 font-mono font-bold bg-black/40 inline-block px-3 py-1 rounded-md">Hạ màn: {{ timer }}s</div>
+                </div>
+            </div>
+
+            <div class="space-y-6">
+                <div class="bg-[#0f0f1d] border border-yellow-600/20 rounded-2xl p-5 shadow-xl">
+                    <h4 class="text-sm font-black text-yellow-400 tracking-wider uppercase border-b border-gray-800 pb-3 mb-4 flex justify-between items-center">
+                        <span>💸 Phát lộc chuyển khoản</span>
+                        <span class="text-[10px] text-cyan-400 lowercase normal-case font-normal">Phí hệ thống: 2%</span>
+                    </h4>
+                    <div class="space-y-3">
+                        <input v-model="transfer.target" type="text" class="w-full bg-black/60 border border-gray-800 rounded-lg p-2 text-sm text-white focus:border-yellow-500 outline-none" placeholder="Nhập ID nhận lộc...">
+                        <input v-model.number="transfer.amount" type="number" class="w-full bg-black/60 border border-gray-800 rounded-lg p-2 text-sm text-white focus:border-yellow-500 outline-none" placeholder="Số lượng xu lộc...">
+                        <button @click="handleTransfer" class="w-full bg-gradient-to-r from-yellow-600 to-yellow-400 hover:from-yellow-500 text-black font-black py-3 rounded-lg uppercase text-xs tracking-wider shadow-md transition-all active:scale-95">Kích Hoạt Chuyển Lộc</button>
                     </div>
-                    <div class="thanh-exp-bg"><div class="thanh-exp-core" id="thanh-exp"></div></div>
-                    <div style="text-align: right; font-size: 0.8rem; margin-top: 5px;" id="txt-exp">0/100 EXP</div>
                 </div>
-            </section>
 
-            <section class="the-giao-dien">
-                <div class="tieu-de-the">ƯỚC MƠ</div>
-                <div class="khu-vuc-3d">
-                    <div class="khoi-lapphuong">
-                        <div class="mat-khoi mat-truoc">UIT<br>VISION</div>
-                        <div class="mat-khoi mat-sau">HCMUS<br>SYSTEM</div>
-                        <div class="mat-khoi mat-phai">HCMUTE</div>
-                        <div class="mat-khoi mat-trai">IUH</div>
-                        <div class="mat-khoi mat-tren">HUIT</div>
-                        <div class="mat-khoi mat-duoi">SGU</div>
+                <div class="bg-[#0f0f1d] border border-yellow-600/20 rounded-2xl p-5 shadow-xl">
+                    <h4 class="text-sm font-black text-yellow-400 tracking-wider uppercase border-b border-gray-800 pb-3 mb-3">📝 Biến động số dư mới nhất</h4>
+                    <div class="max-h-[380px] overflow-y-auto space-y-2 pr-1">
+                        <div v-if="logs.length === 0" class="text-xs text-center text-gray-500 py-6">Chưa phát sinh giao dịch nào.</div>
+                        <div v-for="(l, index) in logs" :key="index" :class="['p-3 rounded-lg border-l-4 flex justify-between items-center bg-black/40', l.type === 'plus' ? 'border-l-green-500' : 'border-l-red-500']">
+                            <div>
+                                <h5 class="text-xs font-bold text-white">{{ l.action }}</h5>
+                                <p class="text-[10px] text-gray-400 mt-0.5">{{ l.time }} - {{ l.detail }}</p>
+                            </div>
+                            <span :class="['text-xs font-black', l.type === 'plus' ? 'text-green-400' : 'text-red-400']">
+                                {{ l.type === 'plus' ? '+' : '-' }}{{ formatMoney(l.amount) }}
+                            </span>
+                        </div>
                     </div>
                 </div>
-            </section>
+            </div>
+        </main>
+
+        <div v-if="activeModal" @click="closeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 transition-opacity"></div>
+
+        <div v-if="activeModal === 'nap'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] max-w-[92vw] bg-[#0c0c14] border-2 border-yellow-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-5">
+                <h3 class="text-lg font-black uppercase text-yellow-400 tracking-wide">Cổng Nạp Tiền VietQR</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
+            </div>
+            <div v-if="!napState.qrGenerated" class="space-y-4">
+                <input v-model.number="napState.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-white focus:border-yellow-400 outline-none" placeholder="Nhập số tiền nạp...">
+                <button @click="generateQR" class="w-full bg-yellow-500 text-black font-black py-3 rounded-xl uppercase text-xs">Khởi tạo mã VietQR</button>
+            </div>
+            <div v-else class="text-center space-y-4">
+                <div class="inline-block p-3 bg-white rounded-2xl shadow-lg">
+                    <img :src="'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=G88_Deposit_' + napState.code" class="w-[200px] h-[200px]" alt="QR Code">
+                </div>
+                <div class="bg-black/60 border border-dashed border-cyan-400 p-3 rounded-xl font-mono text-cyan-400 text-sm font-bold">NỘI DUNG: {{ napState.memo }}</div>
+                <div class="text-xs text-yellow-400 animate-pulse">🔄 Đang chờ tín hiệu luồng tiền (5s)...</div>
+            </div>
         </div>
 
-        <!-- CỘT 2: MA TRẬN NHIỆM VỤ ĐỘNG -->
-        <section class="the-giao-dien" style="display: flex; flex-direction: column;">
-            <div class="tieu-de-the">
-                <span>LỊCH HỌC CỤ THỂ</span>
-                <span id="hien-thi-ngay" style="font-size: 0.9rem; color: #64748b;"></span>
+        <div v-if="activeModal === 'rut'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] max-w-[92vw] bg-[#0c0c14] border-2 border-yellow-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-lg font-black uppercase text-yellow-400 tracking-wide">Rút Xu Về Ngân Hàng</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
             </div>
-            <div class="ma-tran-tuan" id="bo-khung-tuan"></div>
-        </section>
+            <div class="space-y-4">
+                <select v-model="rutState.bank" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-white text-sm"><option value="MBBank">MB Bank</option><option value="Vietcombank">Vietcombank</option></select>
+                <input v-model="rutState.stk" type="text" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-white text-sm" placeholder="Số tài khoản...">
+                <input v-model="rutState.name" type="text" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-white text-sm" placeholder="Họ tên người nhận...">
+                <input v-model.number="rutState.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-white text-sm" placeholder="Số xu muốn rút...">
+                <button @click="handleWithdraw" class="w-full bg-yellow-500 text-black font-black py-3 rounded-xl uppercase text-xs">Gửi Lệnh Rút</button>
+            </div>
+        </div>
 
-        <!-- CỘT 3: ĐỒNG HỒ & TERMINAL -->
-        <div style="display: flex; flex-direction: column; gap: 20px;">
-            <section class="the-giao-dien khu-vuc-dong-ho">
-                <div class="tieu-de-the" style="width: 100%;">Đồng hồ đếm ngược</div>
-                <div class="vong-xoay-nang-luong" id="vong-xoay">
-                    <svg><circle cx="75" cy="75" r="70"></circle><circle class="thanh-tai-tai" id="vong-tien-trinh" cx="75" cy="75" r="70"></circle></svg>
-                    <div class="con-so-dong-ho" id="thoi-gian-so">25:00</div>
+        <div v-if="activeModal === 'code'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[440px] max-w-[92vw] bg-[#0c0c14] border-2 border-yellow-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-5">
+                <h3 class="text-lg font-black uppercase text-yellow-400 tracking-wide">Nhập Giftcode</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <input v-model="codeStr" type="text" class="w-full bg-black border border-gray-800 rounded-xl p-4 text-center text-xl font-mono font-black text-yellow-400 tracking-widest uppercase" placeholder="NHẬP CODE...">
+                <button @click="redeemCode" class="w-full bg-yellow-500 text-black font-black py-3 rounded-xl uppercase text-xs">Xác Nhận Nhận Xu</button>
+            </div>
+        </div>
+
+        <div v-if="activeModal === 'cskh'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[480px] max-w-[92vw] bg-[#0c0c14] border-2 border-cyan-400 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-lg font-black uppercase text-cyan-400 tracking-wide">Hỗ Trợ Khách Hàng NEW789 ANTV </h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
+            </div>
+            <div class="space-y-4">
+                <div id="chatBoxTarget" class="h-[250px] overflow-y-auto bg-black/60 border border-gray-800 rounded-xl p-3 space-y-3">
+                    <div v-for="(msg, i) in chatHistory" :key="i" :class="['p-2.5 rounded-xl max-w-[85%] text-xs line-leading-relaxed', msg.sender === 'bot' ? 'bg-[#1a1a2e] text-white self-start border-l-2 border-cyan-400' : 'bg-cyan-600 text-black font-semibold ml-auto']">{{ msg.text }}</div>
+                </div>
+                <div class="flex gap-2">
+                    <input v-model="chatInput" @keyup.enter="sendChat" type="text" class="flex-1 bg-black border border-gray-800 rounded-xl p-3 text-xs text-white" placeholder="Nhập câu hỏi...">
+                    <button @click="sendChat" class="bg-cyan-400 text-black font-bold px-4 text-xs rounded-xl uppercase">Gửi</button>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="activeModal === 'game-tx'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] max-w-[92vw] bg-[#090910] border-2 border-red-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-md font-black uppercase text-red-500 tracking-wide">🎲 Tài Xỉu Cân Cửa</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-red-500">&times;</button>
+            </div>
+            <div class="bg-black/60 p-4 rounded-2xl border border-gray-900 text-center space-y-4">
+                <div class="text-4xl font-black font-mono text-red-500 animate-pulse">{{ timer }}</div>
+                
+                <div class="relative w-[220px] h-[220px] mx-auto my-4 plate-bg rounded-full p-3 flex justify-center items-center">
+                    <div class="plate-inner flex flex-wrap justify-center content-center gap-2 p-6">
+                        <div v-for="(diceVal, i) in physResult.tx" :key="'tx'+i" class="dice-grid" v-html="renderDice(diceVal)"></div>
+                    </div>
+                    <div v-if="bowlState.show" 
+                         @mousedown="startDrag" @mousemove="doDrag" @mouseup="stopDrag" @mouseleave="stopDrag"
+                         @touchstart="startDrag" @touchmove="doDrag" @touchend="stopDrag"
+                         :style="{ transform: `translate(${bowlState.x}px, ${bowlState.y}px)` }"
+                         class="absolute inset-[-10px] rounded-full bowl-bg z-50 flex justify-center items-center text-white font-bold tracking-widest text-shadow-md">NẶN KẾT QUẢ</div>
                 </div>
                 
-                <div class="khung-cai-dat-gio">
-                    <input type="number" id="input-phut" class="input-phut" value="25" min="1">
-                    <button onclick="capNhatThoiGianMoi()">Set</button>
+                <div class="grid grid-cols-2 gap-4 relative">
+                    <button @click="bet('tx', 'Tai')" :class="['relative p-4 rounded-xl border font-black text-lg transition-all overflow-hidden', gameBets.tx.choice === 'Tai' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        <span class="relative z-0">TÀI <span class="block text-xs font-normal text-gray-500">(11 - 17) x2</span></span>
+                        <div v-if="gameBets.tx.choice === 'Tai'" class="bet-amount-tag">{{ formatShortTag(gameBets.tx.amount) }}</div>
+                    </button>
+                    <button @click="bet('tx', 'Xiu')" :class="['relative p-4 rounded-xl border font-black text-lg transition-all overflow-hidden', gameBets.tx.choice === 'Xiu' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        <span class="relative z-0">XỈU <span class="block text-xs font-normal text-gray-500">(4 - 10) x2</span></span>
+                        <div v-if="gameBets.tx.choice === 'Xiu'" class="bet-amount-tag">{{ formatShortTag(gameBets.tx.amount) }}</div>
+                    </button>
                 </div>
-                <div style="display: flex; gap: 10px;">
-                    <button id="nut-chay" onclick="kichHoatDongHo()">Khởi Động</button>
-                    <button class="nut-dung" onclick="datLaiDongHo()">Hủy</button>
-                </div>
-            </section>
-
-            <section class="the-giao-dien">
-                <div class="tieu-de-the" style="color: #38bdf8;">LỊCH SỬ HOẠT ĐỘNG</div>
-                <div class="loi-dong-lenh" id="man-hinh-log"></div>
-            </section>
+                <input v-model.number="gameBets.tx.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-center font-bold text-white focus:border-red-500 outline-none" placeholder="Mức cược xu (Nhập xong click cửa cược)...">
+            </div>
         </div>
 
-    </main>
+        <div v-if="activeModal === 'game-md5'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] max-w-[92vw] bg-[#090910] border-2 border-cyan-400 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-md font-black uppercase text-cyan-400 tracking-wide">🛡️ Tài Xỉu MD5 Chuỗi</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-cyan-500">&times;</button>
+            </div>
+            <div class="bg-black/60 p-4 rounded-2xl border border-gray-900 text-center space-y-4">
+                <div class="text-4xl font-black font-mono text-cyan-400 animate-pulse">{{ timer }}</div>
+                <div class="bg-black text-[10px] text-cyan-400/80 p-2 rounded-lg font-mono break-all border border-gray-800">
+                    <strong>Hash phiên:</strong> {{ md5Hash }}
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="bet('md5', 'Tai')" :class="['relative p-4 rounded-xl border font-black text-lg transition-all', gameBets.md5.choice === 'Tai' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        TÀI <span class="block text-xs font-normal text-gray-500">Chuỗi 1 x2</span>
+                        <div v-if="gameBets.md5.choice === 'Tai'" class="bet-amount-tag">{{ formatShortTag(gameBets.md5.amount) }}</div>
+                    </button>
+                    <button @click="bet('md5', 'Xiu')" :class="['relative p-4 rounded-xl border font-black text-lg transition-all', gameBets.md5.choice === 'Xiu' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        XỈU <span class="block text-xs font-normal text-gray-500">Chuỗi 2 x2</span>
+                        <div v-if="gameBets.md5.choice === 'Xiu'" class="bet-amount-tag">{{ formatShortTag(gameBets.md5.amount) }}</div>
+                    </button>
+                </div>
+                <input v-model.number="gameBets.md5.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-center font-bold text-white focus:border-cyan-400 outline-none" placeholder="Mức cược xu...">
+            </div>
+        </div>
+
+        <div v-if="activeModal === 'game-xd'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] max-w-[92vw] bg-[#090910] border-2 border-purple-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-md font-black uppercase text-purple-500 tracking-wide">📀 Xóc Đĩa Hoàng Gia</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-purple-500">&times;</button>
+            </div>
+            <div class="bg-black/60 p-4 rounded-2xl border border-gray-900 text-center space-y-4">
+                <div class="text-4xl font-black font-mono text-purple-500 animate-pulse">{{ timer }}</div>
+                
+                <div class="relative w-[220px] h-[220px] mx-auto my-4 plate-bg rounded-full p-3 flex justify-center items-center">
+                    <div class="plate-inner flex flex-wrap justify-center content-center gap-4 p-8">
+                        <div v-for="(color, i) in physResult.xd" :key="'xd'+i" :class="['vi-token', color === 1 ? 'red' : 'white']"></div>
+                    </div>
+                    <div v-if="bowlState.show" @mousedown="startDrag" @mousemove="doDrag" @mouseup="stopDrag" @mouseleave="stopDrag" @touchstart="startDrag" @touchmove="doDrag" @touchend="stopDrag" :style="{ transform: `translate(${bowlState.x}px, ${bowlState.y}px)` }" class="absolute inset-[-10px] rounded-full bowl-bg z-50 flex justify-center items-center text-white font-bold tracking-widest text-shadow-md">NẶN KẾT QUẢ</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="bet('xd', 'Chan')" :class="['relative p-4 rounded-xl border font-black text-lg transition-all', gameBets.xd.choice === 'Chan' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        CHẴN <span class="block text-xs font-normal text-gray-500">4 Đỏ / 4 Trắng / 2-2 x2</span>
+                        <div v-if="gameBets.xd.choice === 'Chan'" class="bet-amount-tag">{{ formatShortTag(gameBets.xd.amount) }}</div>
+                    </button>
+                    <button @click="bet('xd', 'Le')" :class="['relative p-4 rounded-xl border font-black text-lg transition-all', gameBets.xd.choice === 'Le' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        LẺ <span class="block text-xs font-normal text-gray-500">3 Đỏ / 3 Trắng x2</span>
+                        <div v-if="gameBets.xd.choice === 'Le'" class="bet-amount-tag">{{ formatShortTag(gameBets.xd.amount) }}</div>
+                    </button>
+                </div>
+                <input v-model.number="gameBets.xd.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-center font-bold text-white focus:border-purple-400 outline-none" placeholder="Mức cược xu...">
+            </div>
+        </div>
+
+        <div v-if="activeModal === 'game-bc'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[92vw] bg-[#090910] border-2 border-green-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-md font-black uppercase text-green-500 tracking-wide">🦀 Bầu Cua Linh Vật</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-green-500">&times;</button>
+            </div>
+            <div class="bg-black/60 p-4 rounded-2xl border border-gray-900 text-center space-y-4">
+                <div class="text-4xl font-black font-mono text-green-500 animate-pulse">{{ timer }}</div>
+                
+                <div class="relative w-[220px] h-[220px] mx-auto my-4 plate-bg rounded-full p-3 flex justify-center items-center">
+                    <div class="plate-inner flex flex-wrap justify-center content-center gap-2 p-6">
+                        <div v-for="(item, i) in physResult.bc" :key="'bc'+i" class="mascot-token">{{ getBCEmoji(item).split(' ')[0] }}</div>
+                    </div>
+                    <div v-if="bowlState.show" @mousedown="startDrag" @mousemove="doDrag" @mouseup="stopDrag" @mouseleave="stopDrag" @touchstart="startDrag" @touchmove="doDrag" @touchend="stopDrag" :style="{ transform: `translate(${bowlState.x}px, ${bowlState.y}px)` }" class="absolute inset-[-10px] rounded-full bowl-bg z-50 flex justify-center items-center text-white font-bold tracking-widest text-shadow-md">NẶN KẾT QUẢ</div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <button v-for="item in ['Bau', 'Cua', 'Tom', 'Ca', 'Ga', 'Nai']" :key="item" @click="bet('bc', item)" :class="['relative p-2 rounded-xl border font-bold text-sm transition-all flex flex-col items-center justify-center h-[70px]', gameBets.bc.choice === item ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        <span class="text-2xl">{{ getBCEmoji(item).split(' ')[0] }}</span>
+                        <span class="text-[10px]">{{ item.toUpperCase() }}</span>
+                        <div v-if="gameBets.bc.choice === item" class="bet-amount-tag">{{ formatShortTag(gameBets.bc.amount) }}</div>
+                    </button>
+                </div>
+                <input v-model.number="gameBets.bc.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-center font-bold text-white focus:border-green-500 outline-none" placeholder="Mức cược xu...">
+            </div>
+        </div>
+
+        <div v-if="activeModal === 'game-bq'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[520px] max-w-[92vw] bg-[#090910] border-2 border-amber-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-md font-black uppercase text-amber-500 tracking-wide">☯️ Bát Quái Trận (Kinh Dịch)</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-amber-500">&times;</button>
+            </div>
+            <div class="bg-black/60 p-4 rounded-2xl border border-gray-900 text-center space-y-4 overflow-hidden relative">
+                <div class="text-4xl font-black font-mono text-amber-500 animate-pulse z-10 relative">{{ timer }}</div>
+                
+                <div class="bagua-compass w-[220px] h-[220px] rounded-full mx-auto my-4 flex items-center justify-center relative">
+                    <div class="yin-yang z-10"></div>
+                    <div class="absolute inset-0 flex justify-center items-center gap-1 z-20 pointer-events-none" style="transform: translateY(60px);">
+                        <div v-for="(coin, i) in physResult.bqCoins" :key="'coin'+i" class="ancient-coin">{{ coin }}</div>
+                    </div>
+                    <div v-if="physResult.bqLaserAngle !== null" class="laser-beam" :style="{ transform: `rotate(${physResult.bqLaserAngle}deg)` }"></div>
+                </div>
+                
+                <div v-if="physResult.bqMultiplier > 1" class="text-cyan-400 font-bold text-sm animate-bounce z-10 relative">⚡ Ngũ Hành Tương Sinh: X{{physResult.bqMultiplier}} Cửa {{physResult.bqWinningDoorName}}! ⚡</div>
+
+                <div class="grid grid-cols-4 gap-2 relative z-10">
+                    <button v-for="(cung, idx) in ['Càn (Trời)', 'Khảm (Nước)', 'Cấn (Núi)', 'Chấn (Sấm)', 'Tốn (Gió)', 'Ly (Lửa)', 'Khôn (Đất)', 'Đoài (Đầm)']" :key="idx" @click="bet('bq', cung.split(' ')[0])" :class="['relative p-2 rounded-xl border font-bold text-[11px] transition-all', gameBets.bq.choice === cung.split(' ')[0] ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400', physResult.bqWinningDoorName === cung.split(' ')[0] ? 'door-highlight' : '']">
+                        {{ cung }} <span class="block text-[9px] text-gray-500 mt-1">x8</span>
+                        <div v-if="gameBets.bq.choice === cung.split(' ')[0]" class="bet-amount-tag">{{ formatShortTag(gameBets.bq.amount) }}</div>
+                    </button>
+                </div>
+                <input v-model.number="gameBets.bq.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-center font-bold text-white focus:border-amber-500 outline-none z-10 relative" placeholder="Mức cược xu...">
+            </div>
+        </div>
+
+        <div v-if="activeModal === 'game-dt'" class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[460px] max-w-[92vw] bg-[#090910] border-2 border-orange-500 rounded-3xl p-6 z-[60] shadow-2xl">
+            <div class="flex justify-between items-center border-b border-gray-800 pb-3 mb-4">
+                <h3 class="text-md font-black uppercase text-orange-500 tracking-wide">⚔️ Đấu Trường Sinh Tử</h3>
+                <button @click="closeModal" class="text-2xl text-gray-400 hover:text-orange-500">&times;</button>
+            </div>
+            <div class="bg-black/60 p-4 rounded-2xl border border-gray-900 text-center space-y-4">
+                <div class="text-4xl font-black font-mono text-orange-500 animate-pulse">{{ timer }}</div>
+                
+                <div class="bg-[#0b0b14] border border-gray-800 rounded-lg p-3 h-[100px] overflow-y-auto text-left space-y-1 font-mono text-xs">
+                    <div v-for="(log, i) in physResult.dtLogs" :key="'dtl'+i" :class="log.includes('🔴') ? 'text-red-400' : log.includes('🔵') ? 'text-blue-400' : 'text-yellow-500'">{{ log }}</div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <button @click="bet('dt', 'HiepSi')" :class="['relative p-4 rounded-xl border font-black text-sm transition-all overflow-hidden', gameBets.dt.choice === 'HiepSi' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        <span class="text-4xl block mb-2">🛡️</span> HIỆP SĨ ĐỎ
+                        <div v-if="gameBets.dt.choice === 'HiepSi'" class="bet-amount-tag">{{ formatShortTag(gameBets.dt.amount) }}</div>
+                    </button>
+                    <button @click="bet('dt', 'DauSi')" :class="['relative p-4 rounded-xl border font-black text-sm transition-all overflow-hidden', gameBets.dt.choice === 'DauSi' ? 'bet-active-overlay' : 'bg-[#151522] border-gray-800 text-gray-400']">
+                        <span class="text-4xl block mb-2">⚔️</span> ĐẤU SĨ XANH
+                        <div v-if="gameBets.dt.choice === 'DauSi'" class="bet-amount-tag">{{ formatShortTag(gameBets.dt.amount) }}</div>
+                    </button>
+                </div>
+                <input v-model.number="gameBets.dt.amount" type="number" class="w-full bg-black border border-gray-800 rounded-xl p-3 text-center font-bold text-white focus:border-orange-500 outline-none" placeholder="Mức cược xu...">
+            </div>
+        </div>
+
+        <div class="fixed bottom-5 right-5 z-[10000] space-y-2 w-[340px] pointer-events-none">
+            <div v-for="t in toasts" :key="t.id" :class="['p-4 rounded-xl shadow-2xl flex items-center gap-3 text-xs font-bold border-l-4 text-white bg-[#0e0e16]/95 backdrop-blur-md animate-[slideIn_0.2s_ease-out]', t.type === 'success' ? 'border-l-green-500' : t.type === 'error' ? 'border-l-red-500' : 'border-l-cyan-500']">
+                <span>{{ t.type === 'success' ? '✅' : t.type === 'error' ? '❌' : 'ℹ️' }}</span>
+                <div>{{ t.msg }}</div>
+            </div>
+        </div>
+        <style> @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } } </style>
+    </div>
 
     <script>
-        /* =========================================
-           1. HỆ THỐNG LƯU TRỮ VÀ LEVEL TỰ ĐỘNG
-        ========================================= */
-        let duLieuHeThong = JSON.parse(localStorage.getItem('mis_database')) || {
-            "Thứ Hai": [], "Thứ Ba": [], "Thứ Tư": [], "Thứ Năm": [], "Thứ Sáu": [], "Thứ Bảy": [], "Chủ Nhật": []
-        };
-        let misLevel = parseInt(localStorage.getItem('mis_level')) || 1;
-        let misExp = parseInt(localStorage.getItem('mis_exp')) || 0;
+        const { createApp } = Vue;
 
-        function luuDuLieu() {
-            localStorage.setItem('mis_database', JSON.stringify(duLieuHeThong));
-            localStorage.setItem('mis_level', misLevel);
-            localStorage.setItem('mis_exp', misExp);
-        }
-
-        function capNhatLevelUI() {
-            document.getElementById('txt-level').innerText = misLevel;
-            document.getElementById('txt-exp').innerText = `${misExp}/100 EXP`;
-            document.getElementById('thanh-exp').style.width = `${misExp}%`;
-        }
-
-        function themKinhNghiem(diem) {
-            misExp += diem;
-            if(misExp >= 100) {
-                misLevel += 1;
-                misExp = misExp - 100;
-                inLogHienThi(`🌟 [LEVEL UP]: Hệ thống M.I.S đã thăng cấp lên Level ${misLevel}! Năng lực quản trị tăng cường.`);
-            }
-            capNhatLevelUI();
-            luuDuLieu();
-        }
-
-        /* =========================================
-           2. RENDER MA TRẬN NHIỆM VỤ
-        ========================================= */
-        const danhSachNgay = ["Thứ Hai", "Thứ Ba", "Thứ Tư", "Thứ Năm", "Thứ Sáu", "Thứ Bảy", "Chủ Nhật"];
-        let hienTai = new Date().getDay();
-        let indexHomNay = hienTai === 0 ? 6 : hienTai - 1;
-
-        function renderMaTran() {
-            const khungTuan = document.getElementById('bo-khung-tuan');
-            khungTuan.innerHTML = "";
-
-            danhSachNgay.forEach((ngay, index) => {
-                const laHomNay = (index === indexHomNay) ? "hom-nay" : "";
-                const dsTask = duLieuHeThong[ngay];
-                let tong = dsTask.length;
-                let daXong = dsTask.filter(t => t.done).length;
-                let phanTram = tong === 0 ? 0 : Math.round((daXong / tong) * 100);
-
-                let htmlTask = dsTask.map((task, i) => `
-                    <div class="o-nhiem-vu ${task.done ? 'da-xong' : ''}" onclick="doiTrangThai('${ngay}', ${i})">
-                        <span>${task.ten}</span>
-                        <button class="nut-xoa" onclick="xoaTask(event, '${ngay}', ${i})">×</button>
-                    </div>
-                `).join('');
-
-                khungTuan.innerHTML += `
-                    <div class="the-ngay ${laHomNay}">
-                        <div class="khung-tieude-ngay">
-                            <span class="ten-ngay">${ngay}</span>
-                            <span class="phan-tram-hoan-thanh">[ ${phanTram}% ]</span>
-                        </div>
-                        <div class="thanh-tien-do-ngay"><div class="loi-tien-do" style="width: ${phanTram}%;"></div></div>
-                        <div class="danh-sach-task">${htmlTask}</div>
-                        <input type="text" class="input-muc-tieu" placeholder="> Gõ lệnh thêm task & Enter..." onkeypress="xuLyNhapTask(event, '${ngay}')">
-                    </div>
-                `;
-            });
-            document.getElementById('hien-thi-ngay').innerText = new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: '2-digit', day: '2-digit' });
-        }
-
-        function xuLyNhapTask(e, ngay) {
-            if (e.key === "Enter" && e.target.value.trim() !== "") {
-                duLieuHeThong[ngay].push({ ten: e.target.value.trim(), done: false });
-                luuDuLieu(); renderMaTran();
-                inLogHienThi(`[GHI NHẬN]: Đã nạp mục tiêu mới vào khu vực ${ngay}.`);
-            }
-        }
-
-        function doiTrangThai(ngay, viTri) {
-            duLieuHeThong[ngay][viTri].done = !duLieuHeThong[ngay][viTri].done;
-            if(duLieuHeThong[ngay][viTri].done) {
-                inLogHienThi(`[HOÀN THÀNH]: Lệnh "${duLieuHeThong[ngay][viTri].ten}" đã thực thi. +10 EXP.`);
-                themKinhNghiem(10);
-            }
-            luuDuLieu(); renderMaTran();
-        }
-
-        function xoaTask(e, ngay, viTri) {
-            e.stopPropagation();
-            duLieuHeThong[ngay].splice(viTri, 1);
-            luuDuLieu(); renderMaTran();
-        }
-
-        /* =========================================
-           3. ĐẾM NGƯỢC THI TỐT NGHIỆP 2027
-        ========================================= */
-        const ngayThi = new Date("2027-06-25T00:00:00").getTime(); // Mốc dự kiến
-        setInterval(() => {
-            const bayGio = new Date().getTime();
-            const khoangCach = ngayThi - bayGio;
-
-            if (khoangCach > 0) {
-                document.getElementById('dn-ngay').innerText = Math.floor(khoangCach / (1000 * 60 * 60 * 24)).toString().padStart(2, '0');
-                document.getElementById('dn-gio').innerText = Math.floor((khoangCach % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)).toString().padStart(2, '0');
-                document.getElementById('dn-phut').innerText = Math.floor((khoangCach % (1000 * 60 * 60)) / (1000 * 60)).toString().padStart(2, '0');
-                document.getElementById('dn-giay').innerText = Math.floor((khoangCach % (1000 * 60)) / 1000).toString().padStart(2, '0');
-            } else {
-                document.getElementById('dem-nguoc-thi').innerText = "THỜI KHẮC SINH TỬ ĐÃ ĐIỂM!";
-            }
-        }, 1000);
-
-        /* =========================================
-           4. ĐỒNG HỒ POMODORO (ANTI-SLEEP TIMESTAMP)
-        ========================================= */
-        let thoiGianGoc = 25 * 60; let thoiGianConLai = thoiGianGoc;
-        let boDemChay = null; let thoiDiemKetThuc = null;
-        const chuVi = 2 * Math.PI * 70; // Bán kính 70 cho vừa layout mới
-
-        function capNhatThoiGianMoi() {
-            if(boDemChay) return alert("Hủy đồng hồ trước khi cài lại!");
-            let phut = document.getElementById('input-phut').value;
-            if(phut > 0) { thoiGianGoc = phut * 60; datLaiDongHo(); inLogHienThi(`[HỆ THỐNG]: Set bộ đếm: ${phut} phút.`); }
-        }
-
-        function capNhatUI_DongHo() {
-            let p = Math.floor(thoiGianConLai / 60).toString().padStart(2, '0');
-            let g = (thoiGianConLai % 60).toString().padStart(2, '0');
-            document.getElementById('thoi-gian-so').innerText = `${p}:${g}`;
-            document.getElementById('vong-tien-trinh').style.strokeDashoffset = chuVi - ((thoiGianConLai / thoiGianGoc) * chuVi);
-        }
-
-        function kichHoatDongHo() {
-            const nut = document.getElementById('nut-chay');
-            if (!boDemChay) {
-                nut.innerText = "Tạm Dừng";
-                thoiDiemKetThuc = Date.now() + (thoiGianConLai * 1000);
-                inLogHienThi("[BÁO ĐỘNG]: Khởi động Lò Phản Ứng. Thuật toán thời gian thực ON.");
+        createApp({
+            data() {
+                return {
+                    balance: 50000000,
+                    timer: 30,
+                    activeModal: null,
+                    codeStr: '',
+                    chatInput: '',
+                    usedCodes: [],
+                    md5Hash: 'E10ADC3949BA59ABBE56E057F20F883E',
+                    logs: [],
+                    chatHistory: [ { sender: 'bot', text: 'Hệ thống CSKH tự động G88 xin kính chào đại gia! Vui lòng đặt câu hỏi để tổng đài giải đáp.' } ],
+                    napState: { amount: null, qrGenerated: false, memo: '', code: null },
+                    rutState: { bank: 'MBBank', stk: '', name: '', amount: null },
+                    transfer: { target: '', amount: null },
+                    
+                    // State đặt cược 6 games
+                    gameBets: {
+                        tx: { choice: null, amount: null }, md5: { choice: null, amount: null },
+                        xd: { choice: null, amount: null }, bc: { choice: null, amount: null },
+                        bq: { choice: null, amount: null }, dt: { choice: null, amount: null }
+                    },
+                    
+                    // Trạng thái vật lý hiển thị kết quả thật (bát, đĩa, coin, logs)
+                    physResult: {
+                        tx: [1, 1, 1],
+                        xd: [1, 1, 0, 0], // 1=red, 0=white
+                        bc: ['Bau', 'Bau', 'Bau'],
+                        bqCoins: ['Dương', 'Âm', 'Dương'],
+                        bqLaserAngle: null,
+                        bqWinningDoorName: '',
+                        bqMultiplier: 1,
+                        dtLogs: ['[Hệ thống] Chờ các chiến binh vào sàn...']
+                    },
+                    
+                    // State nặn bát (dùng chung cho các trò có bát)
+                    bowlState: { show: true, isDragging: false, startX: 0, startY: 0, x: 0, y: 0 },
+                    
+                    toasts: [], toastId: 0
+                }
+            },
+            
+            mounted() {
+                this.pushLog("Hệ Thống", "Cấp quyền tài khoản VIP thành công", 50000000, "plus");
+                this.startGlobalTimerLoop();
+            },
+            
+            methods: {
+                formatMoney(v) { return v ? v.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ''; },
+                formatShortTag(v) {
+                    if(!v) return '';
+                    if(v >= 1000000) return (v / 1000000).toFixed(1).replace('.0','') + 'tr';
+                    if(v >= 1000) return (v / 1000).toFixed(1).replace('.0','') + 'k';
+                    return v;
+                },
+                showToast(msg, type = 'info') {
+                    const id = this.toastId++;
+                    this.toasts.push({ id, msg, type });
+                    setTimeout(() => { this.toasts = this.toasts.filter(x => x.id !== id); }, 3500);
+                },
+                openModal(anchor) { this.activeModal = anchor; },
+                closeModal() { this.activeModal = null; },
+                pushLog(action, detail, amount, type) {
+                    const time = new Date().toLocaleTimeString('vi-VN', { hour12: false });
+                    this.logs.unshift({ action, detail, amount, type });
+                    if (this.logs.length > 30) this.logs.pop();
+                },
                 
-                boDemChay = setInterval(() => {
-                    thoiGianConLai = Math.round((thoiDiemKetThuc - Date.now()) / 1000);
-                    if (thoiGianConLai > 0) { capNhatUI_DongHo(); } 
-                    else {
-                        thoiGianConLai = 0; capNhatUI_DongHo();
-                        clearInterval(boDemChay); boDemChay = null;
-                        nut.innerText = "Khởi Động";
-                        alert("Hoàn thành mục tiêu cày cuốc! +20 EXP"); 
-                        themKinhNghiem(20); datLaiDongHo();
+                // LOGIC KÉO THẢ BÁT (NẶN)
+                startDrag(e) {
+                    this.bowlState.isDragging = true;
+                    this.bowlState.startX = e.clientX || (e.touches && e.touches[0].clientX);
+                    this.bowlState.startY = e.clientY || (e.touches && e.touches[0].clientY);
+                },
+                doDrag(e) {
+                    if (!this.bowlState.isDragging) return;
+                    e.preventDefault(); // Tránh scroll màn hình trên mobile
+                    const currentX = e.clientX || (e.touches && e.touches[0].clientX);
+                    const currentY = e.clientY || (e.touches && e.touches[0].clientY);
+                    this.bowlState.x += (currentX - this.bowlState.startX);
+                    this.bowlState.y += (currentY - this.bowlState.startY);
+                    this.bowlState.startX = currentX;
+                    this.bowlState.startY = currentY;
+                },
+                stopDrag() { this.bowlState.isDragging = false; },
+                resetBowl() {
+                    this.bowlState = { show: true, isDragging: false, startX: 0, startY: 0, x: 0, y: 0 };
+                },
+
+                // LOGIC CSS GRID CHẤM XÚC XẮC
+                renderDice(val) {
+                    const matrix = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,3,6,2,5,8] };
+                    const active = matrix[val] || [];
+                    const color = (val === 1 || val === 4) ? '#e53935' : '#111'; // Đo chuẩn màu casino VN
+                    let html = '';
+                    for(let i=0; i<9; i++) {
+                        html += active.includes(i) ? `<div class="dot" style="background-color:${color}"></div>` : `<div></div>`;
                     }
-                }, 1000);
-            } else {
-                clearInterval(boDemChay); boDemChay = null;
-                nut.innerText = "Tiếp Tục";
+                    return html;
+                },
+                getBCEmoji(key) {
+                    const emo = { 'Bau':'🦌 Bầu', 'Cua':'🦀 Cua', 'Tom':'🦐 Tôm', 'Ca':'🐟 Cá', 'Ga':'🐓 Gà', 'Nai':'🦌 Nai' };
+                    return emo[key] || '🔮';
+                },
+
+                // LOOP ĐỒNG HỒ TỔNG THỂ
+                startGlobalTimerLoop() {
+                    setInterval(() => {
+                        this.timer--;
+                        if (this.timer < 0) {
+                            this.executeGamesRoll();
+                            this.timer = 30; // Reset vòng quay
+                        }
+                    }, 1000);
+                },
+
+                bet(gameKey, choice) {
+                    if(!this.gameBets[gameKey].amount) this.gameBets[gameKey].amount = 10000; // Default test
+                    this.gameBets[gameKey].choice = choice;
+                },
+
+                // THỰC THI TOÀN BỘ 6 GAME
+                executeGamesRoll() {
+                    // Thu tiền toàn bộ lệnh cược hợp lệ
+                    const keys = ['tx', 'md5', 'xd', 'bc', 'bq', 'dt'];
+                    keys.forEach(k => {
+                        const b = this.gameBets[k];
+                        if (b.choice && b.amount && b.amount > 0) {
+                            if (b.amount > this.balance) {
+                                this.showToast(`Hủy cược tự động phòng ${k.toUpperCase()} vì số dư không đủ!`, 'error');
+                                b.choice = null; b.amount = null;
+                            } else {
+                                this.balance -= b.amount;
+                            }
+                        }
+                    });
+
+                    this.resetBowl(); // Úp bát lại cho ván mới
+
+                    // 1. TÀI XỈU MINI (Vật lý xúc xắc)
+                    const tx1 = Math.floor(Math.random() * 6) + 1;
+                    const tx2 = Math.floor(Math.random() * 6) + 1;
+                    const tx3 = Math.floor(Math.random() * 6) + 1;
+                    this.physResult.tx = [tx1, tx2, tx3];
+                    const txSum = tx1 + tx2 + tx3;
+                    const txWin = txSum >= 11 ? 'Tai' : 'Xiu';
+                    this.evaluateStandardPayout('tx', txWin, 2, `Tài Xỉu Mini: Mở tụ ${txSum} nút [${txWin}]`);
+
+                    // 2. TÀI XỈU MD5
+                    const md5Sum = (Math.floor(Math.random() * 6) + 1) * 3; 
+                    const md5Win = md5Sum >= 11 ? 'Tai' : 'Xiu';
+                    this.evaluateStandardPayout('md5', md5Win, 2, `Tài Xỉu MD5: Mở tụ ${md5Sum} nút`);
+                    this.md5Hash = Array.from({length:32}, () => Math.floor(Math.random()*16).toString(16)).join('').toUpperCase();
+
+                    // 3. XÓC ĐĨA VIP (Vật lý quân vị đỏ/trắng)
+                    const xdCoins = Array.from({length:4}, () => Math.round(Math.random())); // 1=red, 0=white
+                    this.physResult.xd = xdCoins;
+                    const redCount = xdCoins.filter(x => x === 1).length;
+                    const xdWin = redCount % 2 === 0 ? 'Chan' : 'Le';
+                    this.evaluateStandardPayout('xd', xdWin, 2, `Xóc Đĩa: Ra cửa [${xdWin}]`);
+
+                    // 4. BẦU CUA LINH VẬT
+                    const bcItems = ['Bau', 'Cua', 'Tom', 'Ca', 'Ga', 'Nai'];
+                    const r1 = bcItems[Math.floor(Math.random() * 6)];
+                    const r2 = bcItems[Math.floor(Math.random() * 6)];
+                    const r3 = bcItems[Math.floor(Math.random() * 6)];
+                    this.physResult.bc = [r1, r2, r3];
+                    
+                    const bcBet = this.gameBets.bc;
+                    if (bcBet.choice && bcBet.amount > 0) {
+                        let matches = 0;
+                        if (r1 === bcBet.choice) matches++;
+                        if (r2 === bcBet.choice) matches++;
+                        if (r3 === bcBet.choice) matches++;
+                        if (matches > 0) {
+                            const rewards = bcBet.amount * (matches + 1);
+                            this.balance += rewards;
+                            this.pushLog("Thắng Bầu Cua", `Trúng x${matches} tụ linh vật [${bcBet.choice}]`, rewards, "plus");
+                        } else {
+                            this.pushLog("Thua Bầu Cua", `Đặt cửa linh vật [${bcBet.choice}]`, bcBet.amount, "minus");
+                        }
+                    }
+
+                    // 5. BÁT QUÁI TRẬN (Cơ chế gieo xu Kinh Dịch & Ngũ Hành tương sinh)
+                    const bqDoors = ['Càn', 'Khảm', 'Cấn', 'Chấn', 'Tốn', 'Ly', 'Khôn', 'Đoài'];
+                    // Random gieo 3 đồng xu hiển thị
+                    this.physResult.bqCoins = Array.from({length:3}, () => Math.random() > 0.5 ? 'Dương' : 'Âm');
+                    // Random cửa thắng
+                    const bqIdx = Math.floor(Math.random() * 8);
+                    const bqWinDoor = bqDoors[bqIdx];
+                    this.physResult.bqWinningDoorName = bqWinDoor;
+                    // Hiệu ứng tia laser chiếu đúng góc (Mỗi góc cách 45 độ)
+                    this.physResult.bqLaserAngle = (bqIdx * 45) + 22.5; 
+                    
+                    // Random hệ số ngũ hành (10% nổ hũ x5)
+                    this.physResult.bqMultiplier = Math.random() > 0.9 ? 5 : 1; 
+
+                    const bqBet = this.gameBets.bq;
+                    if(bqBet.choice && bqBet.amount > 0) {
+                        if(bqBet.choice === bqWinDoor) {
+                            const bqRew = bqBet.amount * 8 * this.physResult.bqMultiplier;
+                            this.balance += bqRew;
+                            this.pushLog("Thắng Bát Quái", `Kinh Dịch chỉ cửa [${bqWinDoor}] x${8 * this.physResult.bqMultiplier}`, bqRew, "plus");
+                            this.showToast(`Tuyệt vời! Đoán trúng bát quái trận đồ nhận +${this.formatMoney(bqRew)} xu!`, "success");
+                        } else {
+                            this.pushLog("Thua Bát Quái", `Gieo nhầm cửa [${bqBet.choice}]`, bqBet.amount, "minus");
+                        }
+                    }
+
+                    // 6. ĐẤU TRƯỜNG QUÁI THÚ (Cơ chế Battle Log có Delay)
+                    this.physResult.dtLogs = ["⏳ Đang chuyển sàn thi đấu..."];
+                    const dtWin = Math.random() > 0.5 ? 'HiepSi' : 'DauSi';
+                    
+                    // Giả lập trận đấu đẩy log từ từ
+                    setTimeout(() => this.physResult.dtLogs.push("🔴 Hiệp Sĩ vung thanh gươm lửa chém mạnh!"), 1000);
+                    setTimeout(() => this.physResult.dtLogs.push("🔵 Đấu Sĩ Xanh bật khiên gai phản sát thương!"), 2000);
+                    setTimeout(() => {
+                        const finalTxt = dtWin === 'HiepSi' ? "🏆 🔴 HIỆP SĨ tung đòn chí mạng kết liễu thành công!" : "🏆 🔵 ĐẤU SĨ dậm nhảy phản đòn hạ gục đối phương!";
+                        this.physResult.dtLogs.push(finalTxt);
+                        // Delay tính thưởng cho giống diễn biến trận đấu
+                        this.evaluateStandardPayout('dt', dtWin, 2, `Đấu Trường: Phe [${dtWin === 'HiepSi' ? 'Hiệp Sĩ Đỏ' : 'Đấu Sĩ Xanh'}] thắng sinh tử`);
+                    }, 3500);
+
+                    // Reset Data Cược
+                    keys.forEach(k => { this.gameBets[k].choice = null; this.gameBets[k].amount = null; });
+                },
+
+                evaluateStandardPayout(gameKey, winChoice, oddRate, logDesc) {
+                    const betObj = this.gameBets[gameKey];
+                    if (!betObj.choice || !betObj.amount || betObj.amount <= 0) return;
+                    if (betObj.choice === winChoice) {
+                        const winAmt = betObj.amount * oddRate;
+                        this.balance += winAmt;
+                        this.pushLog("Thắng Sàn Casino", logDesc, winAmt, "plus");
+                        this.showToast(`Phòng ${gameKey.toUpperCase()} trả thưởng nổ hũ! Cộng +${this.formatMoney(winAmt)} xu.`, 'success');
+                    } else {
+                        this.pushLog("Thua Phiên Cược", logDesc, betObj.amount, "minus");
+                    }
+                },
+
+                // (Các tính năng Nạp, Rút, Code, CSKH, Chuyển lộc được giữ nguyên 100% logic cũ)
+                handleTransfer() {
+                    const tgt = this.transfer.target.trim(); const amt = this.transfer.amount;
+                    if (!tgt) return this.showToast("Nhập định danh ID tài khoản nhận lộc!", "error");
+                    if (!amt || amt < 10000) return this.showToast("Mức phát lộc tối thiểu là 10,000 xu!", "error");
+                    const realTotal = amt + Math.floor(amt * 0.02);
+                    if (realTotal > this.balance) return this.showToast("Số dư không đủ chuyển!", "error");
+                    this.balance -= realTotal;
+                    this.pushLog("Chuyển Lộc Phát", `Đến: ${tgt}`, amt, "minus");
+                    this.transfer.target = ''; this.transfer.amount = null;
+                },
+                generateQR() {
+                    if (!this.napState.amount || this.napState.amount < 20000) return this.showToast("Nạp từ 20,000 VNĐ trở lên!", "error");
+                    this.napState.code = Math.floor(100000 + Math.random() * 900000);
+                    this.napState.memo = `G88 NAP ${this.napState.code}`;
+                    this.napState.qrGenerated = true;
+                    setTimeout(() => {
+                        if (this.napState.qrGenerated) {
+                            this.balance += this.napState.amount;
+                            this.pushLog("Nạp Tiền VietQR", `Mã nạp: ${this.napState.code}`, this.napState.amount, "plus");
+                            this.closeModal(); this.napState.qrGenerated = false; this.napState.amount = null;
+                        }
+                    }, 5000);
+                },
+                handleWithdraw() {
+                    if (!this.rutState.stk || !this.rutState.name) return this.showToast("Nhập đầy đủ thông tin!", "error");
+                    if (!this.rutState.amount || this.rutState.amount < 100000) return this.showToast("Rút tối thiểu 100,000 xu!", "error");
+                    if (this.rutState.amount > this.balance) return this.showToast("Số dư không đủ!", "error");
+                    this.balance -= this.rutState.amount;
+                    this.pushLog("Rút Tiển Bank", `STK: ${this.rutState.stk}`, this.rutState.amount, "minus");
+                    this.closeModal(); this.rutState.stk = ''; this.rutState.name = ''; this.rutState.amount = null;
+                },
+                redeemCode() {
+                    const code = this.codeStr.trim().toUpperCase();
+                    const book = { "UYTIN500K": 500000, "NEW789VIP": 200000, "REBORN88": 300000, "TANTHU": 1000000 };
+                    if (!code || this.usedCodes.includes(code)) return this.showToast("Mã sai hoặc đã dùng!", "error");
+                    if (book[code]) {
+                        this.balance += book[code]; this.usedCodes.push(code);
+                        this.pushLog("Đổi Code Thưởng", `Mã: ${code}`, book[code], "plus");
+                        this.codeStr = ''; this.closeModal();
+                    }
+                },
+                sendChat() {
+                    const txt = this.chatInput.trim(); if (!txt) return;
+                    this.chatHistory.push({ sender: 'user', text: txt }); this.chatInput = '';
+                    this.$nextTick(() => { document.getElementById('chatBoxTarget').scrollTop = document.getElementById('chatBoxTarget').scrollHeight; });
+                    setTimeout(() => {
+                        this.chatHistory.push({ sender: 'bot', text: 'Hệ thống đã ghi nhận yêu cầu. Tổng đài CSKH VIP sẽ gọi điện trực tiếp xử lý.' });
+                        this.$nextTick(() => { document.getElementById('chatBoxTarget').scrollTop = document.getElementById('chatBoxTarget').scrollHeight; });
+                    }, 1000);
+                }
             }
-        }
-
-        function datLaiDongHo() {
-            clearInterval(boDemChay); boDemChay = null;
-            thoiGianConLai = thoiGianGoc;
-            document.getElementById('nut-chay').innerText = "Khởi Động";
-            capNhatUI_DongHo();
-        }
-
-        /* =========================================
-           5. NHẬT KÝ MIS & EASTER EGG
-        ========================================= */
-        function inLogHienThi(text) {
-            const mh = document.getElementById('man-hinh-log');
-            mh.innerHTML += `<div>> [${new Date().toLocaleTimeString()}] ${text}</div>`;
-            mh.scrollTop = mh.scrollHeight;
-        }
-
-        let lsgp = "";
-        window.addEventListener('keydown', e => {
-            lsgp = (lsgp + e.key.toLowerCase()).slice(-5);
-            if(lsgp.includes("meo")) {
-                document.body.classList.toggle('che-do-meo');
-                inLogHienThi("💖 [TRUY CẬP ẨN]: Kích hoạt mã hệ thống đặc biệt. Giao diện đổi sang Neon Pink.");
-            }
-        });
-
-        // INIT
-        window.onload = () => {
-            renderMaTran(); capNhatLevelUI(); capNhatUI_DongHo();
-            inLogHienThi("[KHỞI ĐỘNG]: Hệ thống M.I.S V.T.V Core đã kích hoạt toàn diện. Sẵn sàng cho kỳ thi 2027!");
-        };
+        }).mount('#app');
     </script>
 </body>
 </html>
