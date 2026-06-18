@@ -834,5 +834,4465 @@
             }
         }).mount('#app');
     </script>
+    <script>
+(() => {
+  'use strict';
+
+  if (window.G88X && window.G88X.__bootedPart1) return;
+
+  const G88X = window.G88X = window.G88X || {};
+  G88X.__bootedPart1 = true;
+
+  G88X.version = 'PRO-CORE-1';
+  G88X.ready = false;
+  G88X.vm = null;
+  G88X.root = null;
+  G88X.fxRoot = null;
+  G88X.fxCanvas = null;
+  G88X.fxCtx = null;
+  G88X.queue = [];
+  G88X.listeners = {};
+  G88X.locked = false;
+
+  G88X.cfg = {
+    storageKey: 'G88X_VIP_VIRTUAL',
+    fxMaxParticles: 220,
+    coinStart: 50000000,
+    depositDelayMs: 50000,
+    transferFeeRate: 0.02,
+    defaultToastMs: 2800,
+    particlesEnabled: true,
+    soundEnabled: true,
+    theme: 'royal-neon'
+  };
+
+  G88X.games = [
+    { id: 'baccarat', title: 'Baccarat Imperial Squeeze', badge: '3D VIP', hue: 'gold' },
+    { id: 'blackjack', title: 'Blackjack Onyx', badge: 'High Roller', hue: 'onyx' },
+    { id: 'craps', title: 'Craps 3D Physics', badge: 'Physics', hue: 'cyan' },
+    { id: 'xocdia', title: 'Xóc Đĩa Tứ Linh Premium', badge: 'Mythic', hue: 'violet' },
+    { id: 'baucua', title: 'Bầu Cua Hoàng Kim', badge: 'Golden', hue: 'emerald' },
+    { id: 'sicbo', title: 'Sicbo Matrix', badge: 'Matrix', hue: 'blue' },
+    { id: 'md5', title: 'Tài Xỉu MD5 Quantum', badge: 'Quantum', hue: 'cyan' },
+    { id: 'wheel', title: 'Cyber Wheel', badge: 'Neon Spin', hue: 'pink' },
+    { id: 'vault', title: "The Hacker's Vault", badge: 'Crypto', hue: 'amber' },
+    { id: 'gladiator', title: "Gladiator's Dice", badge: 'Cinematic', hue: 'red' },
+    { id: 'elements', title: 'Battle of Elements', badge: 'Particle War', hue: 'orange' },
+    { id: 'gravity', title: 'Gravity Roulette', badge: 'Zero-G', hue: 'indigo' }
+  ];
+
+  G88X.state = {
+    balance: G88X.cfg.coinStart,
+    username: 'VIP PLAYER',
+    profileId: 'G88X-' + Math.random().toString(36).slice(2, 8).toUpperCase(),
+    transactionLog: [],
+    usedCodes: [],
+    chatLog: [
+      { sender: 'bot', text: 'CSKH VIP đã sẵn sàng. Gửi yêu cầu để hệ thống phản hồi.' }
+    ],
+    deposit: {
+      amount: 0,
+      qrVisible: false,
+      code: '',
+      memo: '',
+      startedAt: 0,
+      completed: false,
+      pendingTimer: null
+    },
+    withdraw: {
+      bank: 'MBBank',
+      stk: '',
+      name: '',
+      amount: 0
+    },
+    transfer: {
+      target: '',
+      amount: 0
+    },
+    giftcode: '',
+    lastActivity: Date.now(),
+    phase: 'idle',
+    fxEnabled: true,
+    soundEnabled: true
+  };
+
+  G88X.utils = {
+    clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    },
+    rand(min = 0, max = 1) {
+      return Math.random() * (max - min) + min;
+    },
+    randi(min, max) {
+      return Math.floor(G88X.utils.rand(min, max + 1));
+    },
+    choice(list) {
+      return list[Math.floor(Math.random() * list.length)];
+    },
+    uid(prefix = 'id') {
+      return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+    },
+    money(n) {
+      const num = Number(n || 0);
+      return num.toLocaleString('vi-VN');
+    },
+    shortMoney(n) {
+      const num = Number(n || 0);
+      if (num >= 1000000) return (num / 1000000).toFixed(num % 1000000 === 0 ? 0 : 1) + 'tr';
+      if (num >= 1000) return (num / 1000).toFixed(num % 1000 === 0 ? 0 : 1) + 'k';
+      return String(num);
+    },
+    timeStr(ts = Date.now()) {
+      return new Date(ts).toLocaleTimeString('vi-VN', { hour12: false });
+    },
+    clone(obj) {
+      return JSON.parse(JSON.stringify(obj));
+    },
+    lerp(a, b, t) {
+      return a + (b - a) * t;
+    },
+    hexToRgba(hex, alpha = 1) {
+      const c = hex.replace('#', '');
+      const bigint = parseInt(c.length === 3 ? c.split('').map(x => x + x).join('') : c, 16);
+      const r = (bigint >> 16) & 255;
+      const g = (bigint >> 8) & 255;
+      const b = bigint & 255;
+      return `rgba(${r},${g},${b},${alpha})`;
+    },
+    debounce(fn, delay = 100) {
+      let t;
+      return (...args) => {
+        clearTimeout(t);
+        t = setTimeout(() => fn.apply(null, args), delay);
+      };
+    },
+    sanitizeText(v) {
+      return String(v ?? '').replace(/[<>]/g, '');
+    }
+  };
+
+  G88X.storage = {
+    get(key, fallback = null) {
+      try {
+        const raw = localStorage.getItem(`${G88X.cfg.storageKey}:${key}`);
+        return raw == null ? fallback : JSON.parse(raw);
+      } catch {
+        return fallback;
+      }
+    },
+    set(key, value) {
+      try {
+        localStorage.setItem(`${G88X.cfg.storageKey}:${key}`, JSON.stringify(value));
+      } catch {}
+    },
+    remove(key) {
+      try {
+        localStorage.removeItem(`${G88X.cfg.storageKey}:${key}`);
+      } catch {}
+    }
+  };
+
+  G88X.events = {
+    on(name, fn) {
+      if (!G88X.listeners[name]) G88X.listeners[name] = [];
+      G88X.listeners[name].push(fn);
+      return () => G88X.events.off(name, fn);
+    },
+    off(name, fn) {
+      const arr = G88X.listeners[name];
+      if (!arr) return;
+      const idx = arr.indexOf(fn);
+      if (idx >= 0) arr.splice(idx, 1);
+    },
+    emit(name, payload) {
+      const arr = G88X.listeners[name];
+      if (!arr) return;
+      arr.slice().forEach(fn => {
+        try { fn(payload); } catch (err) { console.error('[G88X event error]', name, err); }
+      });
+    }
+  };
+
+  G88X.audio = {
+    ctx: null,
+    master: null,
+    enabled: true,
+    ensure() {
+      if (this.ctx) return this.ctx;
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return null;
+      this.ctx = new AudioCtx();
+      this.master = this.ctx.createGain();
+      this.master.gain.value = 0.12;
+      this.master.connect(this.ctx.destination);
+      return this.ctx;
+    },
+    resume() {
+      const ctx = this.ensure();
+      if (ctx && ctx.state === 'suspended') return ctx.resume();
+      return Promise.resolve();
+    },
+    tone({ freq = 440, dur = 0.08, type = 'sine', gain = 0.15, detune = 0 }) {
+      if (!this.enabled) return;
+      const ctx = this.ensure();
+      if (!ctx || !this.master) return;
+      const osc = ctx.createOscillator();
+      const amp = ctx.createGain();
+      osc.type = type;
+      osc.frequency.value = freq;
+      osc.detune.value = detune;
+      amp.gain.value = 0.0001;
+      osc.connect(amp);
+      amp.connect(this.master);
+      const now = ctx.currentTime;
+      amp.gain.exponentialRampToValueAtTime(Math.max(0.0001, gain), now + 0.01);
+      amp.gain.exponentialRampToValueAtTime(0.0001, now + dur);
+      osc.start(now);
+      osc.stop(now + dur + 0.03);
+    },
+    click() { this.tone({ freq: 700, dur: 0.04, type: 'square', gain: 0.08 }); },
+    coin() { this.tone({ freq: 980, dur: 0.08, type: 'triangle', gain: 0.1 }); },
+    success() { this.tone({ freq: 1180, dur: 0.1, type: 'sine', gain: 0.12 }); setTimeout(() => this.tone({ freq: 1480, dur: 0.12, type: 'sine', gain: 0.1 }), 70); },
+    fail() { this.tone({ freq: 180, dur: 0.18, type: 'sawtooth', gain: 0.1 }); },
+    spin() {
+      this.tone({ freq: 300, dur: 0.06, type: 'triangle', gain: 0.06 });
+      setTimeout(() => this.tone({ freq: 360, dur: 0.06, type: 'triangle', gain: 0.06 }), 60);
+      setTimeout(() => this.tone({ freq: 420, dur: 0.06, type: 'triangle', gain: 0.06 }), 120);
+    },
+    sweepUp() {
+      this.tone({ freq: 220, dur: 0.12, type: 'sine', gain: 0.06 });
+      setTimeout(() => this.tone({ freq: 440, dur: 0.12, type: 'sine', gain: 0.08 }), 90);
+      setTimeout(() => this.tone({ freq: 880, dur: 0.14, type: 'sine', gain: 0.1 }), 180);
+    }
+  };
+
+  G88X.fx = {
+    particles: [],
+    active: true,
+    shell: null,
+    ensure() {
+      if (this.shell) return this.shell;
+      const shell = document.createElement('div');
+      shell.id = 'g88x-fx-shell';
+      shell.innerHTML = `
+        <canvas id="g88x-fx-canvas"></canvas>
+        <div id="g88x-fx-overlay"></div>
+        <div id="g88x-fx-burst"></div>
+      `;
+      document.body.appendChild(shell);
+
+      G88X.fxRoot = shell;
+      G88X.fxCanvas = shell.querySelector('#g88x-fx-canvas');
+      G88X.fxCtx = G88X.fxCanvas.getContext('2d', { alpha: true });
+
+      const resize = () => {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        G88X.fxCanvas.width = Math.floor(window.innerWidth * dpr);
+        G88X.fxCanvas.height = Math.floor(window.innerHeight * dpr);
+        G88X.fxCanvas.style.width = '100%';
+        G88X.fxCanvas.style.height = '100%';
+        G88X.fxCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      };
+
+      window.addEventListener('resize', resize, { passive: true });
+      resize();
+      this.shell = shell;
+      return shell;
+    },
+    flash(color = 'rgba(255,215,0,.18)', duration = 280) {
+      this.ensure();
+      const overlay = G88X.fxRoot.querySelector('#g88x-fx-overlay');
+      overlay.style.background = color;
+      overlay.style.opacity = '1';
+      overlay.style.transition = `opacity ${duration}ms ease`;
+      requestAnimationFrame(() => {
+        overlay.style.opacity = '0';
+      });
+      setTimeout(() => { overlay.style.background = 'transparent'; }, duration + 40);
+    },
+    burst(x = innerWidth / 2, y = innerHeight / 2, color = '#ffd700', count = 18) {
+      this.ensure();
+      for (let i = 0; i < count; i++) {
+        this.particles.push({
+          x, y,
+          vx: G88X.utils.rand(-4.5, 4.5),
+          vy: G88X.utils.rand(-7, 2),
+          life: G88X.utils.rand(24, 70),
+          maxLife: 70,
+          size: G88X.utils.rand(1.5, 5.5),
+          color
+        });
+      }
+      this.active = true;
+    },
+    text(x, y, label, color = '#fff') {
+      this.ensure();
+      const burst = G88X.fxRoot.querySelector('#g88x-fx-burst');
+      const el = document.createElement('div');
+      el.className = 'g88x-fx-floating-text';
+      el.textContent = label;
+      el.style.left = `${x}px`;
+      el.style.top = `${y}px`;
+      el.style.color = color;
+      burst.appendChild(el);
+      setTimeout(() => el.remove(), 1200);
+    },
+    draw() {
+      this.ensure();
+      const ctx = G88X.fxCtx;
+      if (!ctx) return;
+
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      ctx.clearRect(0, 0, w, h);
+
+      for (let i = this.particles.length - 1; i >= 0; i--) {
+        const p = this.particles[i];
+        p.vy += 0.12;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life--;
+
+        const a = Math.max(0, p.life / p.maxLife);
+        ctx.save();
+        ctx.globalAlpha = a;
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = 18;
+        ctx.shadowColor = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+        if (p.life <= 0 || p.x < -80 || p.y < -80 || p.x > w + 80 || p.y > h + 80) {
+          this.particles.splice(i, 1);
+        }
+      }
+
+      if (this.particles.length || this.active) requestAnimationFrame(() => this.draw());
+    },
+    start() {
+      if (!G88X.cfg.particlesEnabled) return;
+      if (!this.shell) this.ensure();
+      this.active = true;
+      requestAnimationFrame(() => this.draw());
+    }
+  };
+
+  G88X.wallet = {
+    syncFromStorage() {
+      const saved = G88X.storage.get('wallet', null);
+      if (saved && typeof saved.balance === 'number') {
+        G88X.state.balance = saved.balance;
+      }
+      const dep = G88X.storage.get('deposit', null);
+      if (dep) G88X.state.deposit = { ...G88X.state.deposit, ...dep };
+      const chat = G88X.storage.get('chatLog', null);
+      if (Array.isArray(chat) && chat.length) G88X.state.chatLog = chat;
+      const logs = G88X.storage.get('transactionLog', null);
+      if (Array.isArray(logs)) G88X.state.transactionLog = logs;
+      const codes = G88X.storage.get('usedCodes', null);
+      if (Array.isArray(codes)) G88X.state.usedCodes = codes;
+    },
+    persist() {
+      G88X.storage.set('wallet', { balance: G88X.state.balance, username: G88X.state.username, profileId: G88X.state.profileId });
+      G88X.storage.set('deposit', G88X.state.deposit);
+      G88X.storage.set('chatLog', G88X.state.chatLog);
+      G88X.storage.set('transactionLog', G88X.state.transactionLog);
+      G88X.storage.set('usedCodes', G88X.state.usedCodes);
+    },
+    add(amount, reason = 'Cộng coin ảo') {
+      const n = Number(amount || 0);
+      G88X.state.balance = Math.max(0, G88X.state.balance + n);
+      G88X.wallet.log('plus', reason, n);
+      G88X.wallet.persist();
+      G88X.events.emit('wallet:add', { amount: n, reason, balance: G88X.state.balance });
+      G88X.fx.flash('rgba(56,189,248,.12)', 220);
+      G88X.audio.coin();
+    },
+    subtract(amount, reason = 'Trừ coin ảo') {
+      const n = Number(amount || 0);
+      G88X.state.balance = Math.max(0, G88X.state.balance - n);
+      G88X.wallet.log('minus', reason, n);
+      G88X.wallet.persist();
+      G88X.events.emit('wallet:subtract', { amount: n, reason, balance: G88X.state.balance });
+      G88X.audio.fail();
+    },
+    log(type, action, amount = 0, detail = '') {
+      G88X.state.transactionLog.unshift({
+        id: G88X.utils.uid('tx'),
+        type,
+        action,
+        amount,
+        detail,
+        time: G88X.utils.timeStr()
+      });
+      if (G88X.state.transactionLog.length > 50) G88X.state.transactionLog.pop();
+    }
+  };
+
+  G88X.qr = {
+    createCode(amount) {
+      const code = Math.floor(100000 + Math.random() * 900000);
+      const memo = `G88 NAP ${code}`;
+      return { code, memo, amount };
+    },
+    renderVirtualQR(amount) {
+      const codeData = `G88X_VIRTUAL_QR:${amount}:${Date.now()}:${Math.random().toString(36).slice(2, 8)}`;
+      const img = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(codeData)}`;
+      return { img, codeData };
+    }
+  };
+
+  G88X.bootstrapStyles = () => {
+    if (document.getElementById('g88x-part1-style')) return;
+    const style = document.createElement('style');
+    style.id = 'g88x-part1-style';
+    style.textContent = `
+      #g88x-fx-shell{
+        position:fixed;inset:0;pointer-events:none;z-index:9998;overflow:hidden;
+      }
+      #g88x-fx-canvas{
+        position:absolute;inset:0;width:100%;height:100%;
+      }
+      #g88x-fx-overlay{
+        position:absolute;inset:0;background:transparent;opacity:0;transition:opacity .25s ease;
+        mix-blend-mode:screen;
+      }
+      #g88x-fx-burst{
+        position:absolute;inset:0;pointer-events:none;
+      }
+      .g88x-fx-floating-text{
+        position:absolute;transform:translate(-50%,-50%);
+        font-weight:900;font-size:14px;letter-spacing:.08em;text-shadow:0 0 18px rgba(255,255,255,.55);
+        animation:g88xFloat 1.15s ease-out forwards;
+        white-space:nowrap;
+      }
+      @keyframes g88xFloat{
+        0%{opacity:0;transform:translate(-50%,-50%) scale(.8)}
+        20%{opacity:1}
+        100%{opacity:0;transform:translate(-50%,-140%) scale(1.12)}
+      }
+      .g88x-neon-glow{
+        box-shadow:0 0 18px rgba(255,215,0,.18), inset 0 0 18px rgba(255,255,255,.04);
+      }
+      .g88x-hidden{
+        display:none !important;
+      }
+    `;
+    document.head.appendChild(style);
+  };
+
+  G88X.hooks = {
+    bindVue(vm) {
+      G88X.vm = vm;
+      G88X.ready = true;
+      G88X.state.lastActivity = Date.now();
+      G88X.wallet.syncFromStorage();
+      G88X.fx.ensure();
+      G88X.fx.start();
+      return vm;
+    }
+  };
+
+  G88X.syncLoop = () => {
+    G88X.wallet.persist();
+    if (G88X.state.deposit && G88X.state.deposit.qrVisible && G88X.state.deposit.startedAt) {
+      const elapsed = Date.now() - G88X.state.deposit.startedAt;
+      if (!G88X.state.deposit.completed && elapsed >= G88X.cfg.depositDelayMs) {
+        G88X.state.deposit.completed = true;
+        const addAmount = Number(G88X.state.deposit.amount || 0);
+        if (addAmount > 0) {
+          G88X.wallet.add(addAmount, 'Nạp VietQR ảo tự động');
+          G88X.fx.burst(window.innerWidth * 0.5, window.innerHeight * 0.22, '#22d3ee', 40);
+          G88X.fx.text(window.innerWidth * 0.5, window.innerHeight * 0.18, `+${G88X.utils.money(addAmount)} COIN`, '#67e8f9');
+          G88X.audio.success();
+          G88X.events.emit('deposit:completed', { amount: addAmount, code: G88X.state.deposit.code });
+        }
+      }
+    }
+    setTimeout(G88X.syncLoop, 1000);
+  };
+
+  G88X.markActive = () => {
+    G88X.state.lastActivity = Date.now();
+  };
+
+  G88X.openVirtualDeposit = (amount) => {
+    const amt = Number(amount || 0);
+    if (amt <= 0) return false;
+    const qr = G88X.qr.createCode(amt);
+    G88X.state.deposit.amount = amt;
+    G88X.state.deposit.code = qr.code;
+    G88X.state.deposit.memo = qr.memo;
+    G88X.state.deposit.qrVisible = true;
+    G88X.state.deposit.startedAt = Date.now();
+    G88X.state.deposit.completed = false;
+    G88X.wallet.persist();
+    G88X.audio.sweepUp();
+    G88X.fx.flash('rgba(251,191,36,.16)', 260);
+    G88X.events.emit('deposit:opened', qr);
+    return qr;
+  };
+
+  G88X.resetDeposit = () => {
+    G88X.state.deposit.qrVisible = false;
+    G88X.state.deposit.amount = 0;
+    G88X.state.deposit.code = '';
+    G88X.state.deposit.memo = '';
+    G88X.state.deposit.startedAt = 0;
+    G88X.state.deposit.completed = false;
+    G88X.wallet.persist();
+  };
+
+  G88X.applyTransferFee = (amount) => {
+    const amt = Number(amount || 0);
+    return Math.ceil(amt * G88X.cfg.transferFeeRate);
+  };
+
+  G88X.canAfford = (amount) => Number(G88X.state.balance || 0) >= Number(amount || 0);
+
+  G88X.setTheme = (name) => {
+    G88X.cfg.theme = name || G88X.cfg.theme;
+    document.documentElement.setAttribute('data-g88-theme', G88X.cfg.theme);
+  };
+
+  G88X.notify = (msg, type = 'info') => {
+    if (G88X.vm && typeof G88X.vm.showToast === 'function') {
+      G88X.vm.showToast(msg, type);
+      return;
+    }
+    console.log(`[${type}] ${msg}`);
+  };
+
+  G88X.injectShell = () => {
+    if (G88X.root) return G88X.root;
+    const root = document.createElement('div');
+    root.id = 'g88x-core-root';
+    root.className = 'g88x-hidden';
+    document.body.appendChild(root);
+    G88X.root = root;
+    return root;
+  };
+
+  G88X.start = () => {
+    G88X.bootstrapStyles();
+    G88X.injectShell();
+    G88X.wallet.syncFromStorage();
+    G88X.audio.ensure();
+    G88X.fx.ensure();
+    G88X.fx.start();
+    G88X.syncLoop();
+    G88X.ready = true;
+    G88X.events.emit('part1:ready', { version: G88X.version });
+  };
+
+  window.addEventListener('pointerdown', () => G88X.audio.resume(), { once: false, passive: true });
+  window.addEventListener('keydown', G88X.markActive, { passive: true });
+  window.addEventListener('mousemove', G88X.markActive, { passive: true });
+
+  G88X.start();
+})();
+</script>
+<script>
+(() => {
+  'use strict';
+
+  const G88X = window.G88X = window.G88X || {};
+  if (!G88X.ui) G88X.ui = {};
+
+  if (G88X.ui.__bootedPart2) return;
+  G88X.ui.__bootedPart2 = true;
+
+  const css = `
+    :root{
+      --g88-bg:#04050b;
+      --g88-panel:rgba(10,12,24,.72);
+      --g88-panel-2:rgba(16,18,34,.86);
+      --g88-gold:#ffd76a;
+      --g88-gold-2:#b8891d;
+      --g88-cyan:#4ce7ff;
+      --g88-violet:#c58cff;
+      --g88-red:#ff5e78;
+      --g88-green:#4cffb5;
+      --g88-shadow:0 20px 60px rgba(0,0,0,.45);
+      --g88-border:rgba(255,255,255,.08);
+      --g88-glass:blur(18px);
+    }
+
+    html,body{
+      background:
+        radial-gradient(circle at 15% 20%, rgba(255,215,106,.08), transparent 22%),
+        radial-gradient(circle at 80% 10%, rgba(76,231,255,.08), transparent 18%),
+        radial-gradient(circle at 50% 110%, rgba(197,140,255,.10), transparent 24%),
+        linear-gradient(180deg, #030308 0%, #050714 50%, #02030a 100%) !important;
+      color:#f5f7ff;
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:'';
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(transparent 0 96%, rgba(255,255,255,.03) 96% 100%),
+        linear-gradient(90deg, transparent 0 96%, rgba(255,255,255,.02) 96% 100%);
+      background-size:100% 100%, 44px 44px;
+      opacity:.18;
+      z-index:0;
+    }
+
+    body::after{
+      content:'';
+      position:fixed;
+      inset:-20%;
+      pointer-events:none;
+      background:
+        radial-gradient(circle at 50% 50%, rgba(255,215,106,.06), transparent 25%),
+        radial-gradient(circle at 70% 30%, rgba(76,231,255,.05), transparent 20%),
+        radial-gradient(circle at 20% 80%, rgba(197,140,255,.04), transparent 22%);
+      filter: blur(50px);
+      animation:g88xBgShift 18s ease-in-out infinite alternate;
+      z-index:0;
+    }
+
+    @keyframes g88xBgShift{
+      0%{ transform: translate3d(-2%, -1%, 0) scale(1); opacity:.85; }
+      100%{ transform: translate3d(2%, 1%, 0) scale(1.04); opacity:1; }
+    }
+
+    #app, #g88x-core-root{
+      position:relative;
+      z-index:1;
+    }
+
+    .g88x-vip-shell{
+      position:relative;
+      border:1px solid var(--g88-border);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02)),
+        linear-gradient(180deg, rgba(9,10,18,.95), rgba(8,10,20,.78));
+      backdrop-filter: var(--g88-glass);
+      -webkit-backdrop-filter: var(--g88-glass);
+      box-shadow: var(--g88-shadow);
+    }
+
+    .g88x-vip-shell::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      padding:1px;
+      border-radius:inherit;
+      background: linear-gradient(135deg, rgba(255,215,106,.55), rgba(76,231,255,.24), rgba(197,140,255,.22), rgba(255,215,106,.40));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+      pointer-events:none;
+      opacity:.7;
+    }
+
+    .g88x-vip-card{
+      position:relative;
+      border-radius:28px;
+      overflow:hidden;
+      transform-style: preserve-3d;
+      transition: transform .28s ease, box-shadow .28s ease, border-color .28s ease, filter .28s ease;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.01)),
+        linear-gradient(180deg, rgba(12,14,28,.90), rgba(6,8,18,.84));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: 0 10px 40px rgba(0,0,0,.35);
+    }
+
+    .g88x-vip-card:hover{
+      transform: perspective(900px) translateY(-4px) rotateX(2deg) rotateY(-2deg);
+      box-shadow: 0 24px 60px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.05), 0 0 32px rgba(255,215,106,.07);
+      filter: saturate(1.04);
+    }
+
+    .g88x-vip-card .g88x-card-glow{
+      position:absolute;
+      inset:-1px;
+      border-radius:inherit;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255,215,106,.16), transparent 24%),
+        radial-gradient(circle at 80% 0%, rgba(76,231,255,.12), transparent 20%),
+        radial-gradient(circle at 60% 100%, rgba(197,140,255,.12), transparent 22%);
+      opacity:.8;
+      pointer-events:none;
+      mix-blend-mode: screen;
+    }
+
+    .g88x-title{
+      font-weight:900;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      background: linear-gradient(135deg, #fff 0%, var(--g88-gold) 35%, var(--g88-gold-2) 65%, #fff8c7 100%);
+      -webkit-background-clip:text;
+      -webkit-text-fill-color:transparent;
+      text-shadow: 0 0 18px rgba(255,215,106,.12);
+    }
+
+    .g88x-subtitle{
+      color: rgba(255,255,255,.62);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .g88x-chip{
+      display:inline-flex;
+      align-items:center;
+      gap:.5rem;
+      padding:.45rem .8rem;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,.12);
+      background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.03));
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 8px 20px rgba(0,0,0,.16);
+      color:#fff;
+      font-size:11px;
+      font-weight:800;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+
+    .g88x-btn{
+      position:relative;
+      border:none;
+      outline:none;
+      border-radius:16px;
+      padding:12px 16px;
+      font-weight:900;
+      letter-spacing:.06em;
+      text-transform:uppercase;
+      color:#0b0d17;
+      background: linear-gradient(135deg, #fff 0%, var(--g88-gold) 45%, var(--g88-gold-2) 100%);
+      box-shadow: 0 14px 32px rgba(255,215,106,.12), inset 0 1px 0 rgba(255,255,255,.65);
+      transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+    }
+
+    .g88x-btn:hover{
+      transform: translateY(-1px) scale(1.01);
+      filter: brightness(1.05);
+      box-shadow: 0 18px 36px rgba(255,215,106,.16), inset 0 1px 0 rgba(255,255,255,.72);
+    }
+
+    .g88x-btn:active{
+      transform: translateY(1px) scale(.99);
+    }
+
+    .g88x-btn-ghost{
+      color:#fff;
+      background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 10px 24px rgba(0,0,0,.16);
+    }
+
+    .g88x-input,
+    .g88x-select,
+    .g88x-textarea{
+      width:100%;
+      border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      color:#fff;
+      outline:none;
+      padding:12px 14px;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 12px 24px rgba(0,0,0,.12);
+    }
+
+    .g88x-input::placeholder,
+    .g88x-textarea::placeholder{
+      color: rgba(255,255,255,.36);
+    }
+
+    .g88x-input:focus,
+    .g88x-select:focus,
+    .g88x-textarea:focus{
+      border-color: rgba(255,215,106,.55);
+      box-shadow: 0 0 0 3px rgba(255,215,106,.09), inset 0 1px 0 rgba(255,255,255,.05);
+    }
+
+    .g88x-grid{
+      display:grid;
+      gap:16px;
+    }
+
+    .g88x-grid-3{
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .g88x-grid-4{
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .g88x-grid-2{
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    @media (max-width: 1280px){
+      .g88x-grid-4{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .g88x-grid-3{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 820px){
+      .g88x-grid-4,
+      .g88x-grid-3,
+      .g88x-grid-2{ grid-template-columns: 1fr; }
+    }
+
+    .g88x-lobby-header{
+      position:sticky;
+      top:0;
+      z-index:60;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      background: linear-gradient(180deg, rgba(5,6,12,.92), rgba(5,6,12,.78));
+      border-bottom:1px solid rgba(255,255,255,.08);
+    }
+
+    .g88x-marquee{
+      overflow:hidden;
+      white-space:nowrap;
+      mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+    }
+
+    .g88x-marquee > span{
+      display:inline-block;
+      padding-left:100%;
+      animation:g88xMarquee 28s linear infinite;
+    }
+
+    @keyframes g88xMarquee{
+      0%{ transform:translateX(0); }
+      100%{ transform:translateX(-100%); }
+    }
+
+    .g88x-3d-stage{
+      position:relative;
+      border-radius:32px;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 50% 20%, rgba(255,215,106,.08), transparent 25%),
+        radial-gradient(circle at 20% 80%, rgba(76,231,255,.08), transparent 22%),
+        linear-gradient(180deg, rgba(10,12,23,.95), rgba(5,6,13,.92));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: 0 30px 80px rgba(0,0,0,.38);
+    }
+
+    .g88x-3d-stage::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      background:
+        linear-gradient(120deg, transparent 0 45%, rgba(255,255,255,.05) 50%, transparent 55%),
+        radial-gradient(circle at 50% 50%, transparent 0 55%, rgba(0,0,0,.45) 100%);
+      mix-blend-mode: screen;
+      opacity:.45;
+    }
+
+    .g88x-lux-panel{
+      position:relative;
+      border-radius:24px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+      box-shadow: 0 18px 40px rgba(0,0,0,.22);
+    }
+
+    .g88x-divider{
+      height:1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+    }
+
+    .g88x-text-gold{
+      color: var(--g88-gold);
+      text-shadow: 0 0 18px rgba(255,215,106,.14);
+    }
+
+    .g88x-text-cyan{
+      color: var(--g88-cyan);
+      text-shadow: 0 0 18px rgba(76,231,255,.14);
+    }
+
+    .g88x-text-violet{
+      color: var(--g88-violet);
+      text-shadow: 0 0 18px rgba(197,140,255,.16);
+    }
+
+    .g88x-ribbon{
+      position:absolute;
+      top:16px;
+      right:-34px;
+      transform: rotate(34deg);
+      padding:6px 44px;
+      font-size:11px;
+      font-weight:900;
+      letter-spacing:.1em;
+      text-transform:uppercase;
+      color:#0a0c13;
+      background: linear-gradient(135deg, #fff 0%, #ffd76a 45%, #b8891d 100%);
+      box-shadow: 0 12px 20px rgba(0,0,0,.2);
+      pointer-events:none;
+    }
+
+    .g88x-modal{
+      position:fixed;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:24px;
+      background: rgba(0,0,0,.64);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index:70;
+    }
+
+    .g88x-modal-card{
+      position:relative;
+      width:min(920px, 96vw);
+      border-radius:32px;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 20% 0%, rgba(255,215,106,.08), transparent 18%),
+        radial-gradient(circle at 100% 20%, rgba(76,231,255,.08), transparent 18%),
+        linear-gradient(180deg, rgba(10,12,24,.96), rgba(4,5,12,.96));
+      border:1px solid rgba(255,255,255,.10);
+      box-shadow: 0 36px 120px rgba(0,0,0,.58);
+    }
+
+    .g88x-modal-card::before{
+      content:'';
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      pointer-events:none;
+      padding:1px;
+      background: linear-gradient(135deg, rgba(255,255,255,.22), rgba(255,215,106,.4), rgba(76,231,255,.18), rgba(255,255,255,.12));
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+      mask-composite: exclude;
+    }
+
+    .g88x-toast-stack{
+      position:fixed;
+      right:18px;
+      bottom:18px;
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+      z-index:120;
+      pointer-events:none;
+    }
+
+    .g88x-toast{
+      min-width:280px;
+      max-width:360px;
+      padding:14px 16px;
+      border-radius:18px;
+      color:#fff;
+      border:1px solid rgba(255,255,255,.08);
+      background: linear-gradient(180deg, rgba(14,16,30,.95), rgba(7,8,16,.92));
+      box-shadow: 0 18px 50px rgba(0,0,0,.3);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      animation:g88xToastIn .22s ease-out;
+    }
+
+    @keyframes g88xToastIn{
+      from{ transform: translateX(18px); opacity:0; }
+      to{ transform: translateX(0); opacity:1; }
+    }
+
+    .g88x-toast.success{ border-left:4px solid #4cffb5; }
+    .g88x-toast.error{ border-left:4px solid #ff5e78; }
+    .g88x-toast.info{ border-left:4px solid #4ce7ff; }
+
+    .g88x-scanline{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .g88x-scanline::after{
+      content:'';
+      position:absolute;
+      left:0;
+      right:0;
+      top:-20%;
+      height:30%;
+      background: linear-gradient(180deg, transparent 0%, rgba(255,255,255,.08) 50%, transparent 100%);
+      animation:g88xScan 4.5s linear infinite;
+      pointer-events:none;
+      mix-blend-mode: screen;
+      opacity:.55;
+    }
+
+    @keyframes g88xScan{
+      0%{ transform: translateY(0); }
+      100%{ transform: translateY(420%); }
+    }
+
+    .g88x-float{
+      animation:g88xFloatY 5s ease-in-out infinite;
+    }
+
+    @keyframes g88xFloatY{
+      0%,100%{ transform: translateY(0); }
+      50%{ transform: translateY(-6px); }
+    }
+
+    .g88x-hover-lift{
+      transition: transform .2s ease, box-shadow .2s ease, filter .2s ease;
+    }
+    .g88x-hover-lift:hover{
+      transform: translateY(-2px);
+      filter: brightness(1.03);
+    }
+
+    .g88x-neon-line{
+      height:2px;
+      background: linear-gradient(90deg, transparent, rgba(255,215,106,.85), rgba(76,231,255,.85), transparent);
+      box-shadow: 0 0 12px rgba(255,215,106,.2);
+    }
+
+    .g88x-mini-stat{
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      padding:14px 16px;
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.08);
+    }
+
+    .g88x-mini-stat > b{
+      font-size:12px;
+      text-transform:uppercase;
+      letter-spacing:.08em;
+      color: rgba(255,255,255,.58);
+    }
+
+    .g88x-mini-stat > span{
+      font-size:18px;
+      font-weight:900;
+      color:#fff;
+    }
+
+    .g88x-spin-slow{
+      animation:g88xSpin 9s linear infinite;
+    }
+
+    @keyframes g88xSpin{
+      to{ transform: rotate(360deg); }
+    }
+
+    .g88x-press{
+      position:relative;
+      overflow:hidden;
+    }
+
+    .g88x-press::after{
+      content:'';
+      position:absolute;
+      inset:0;
+      background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.14), transparent 55%);
+      opacity:0;
+      transition: opacity .18s ease;
+      pointer-events:none;
+    }
+
+    .g88x-press:active::after{
+      opacity:1;
+    }
+  `;
+
+  if (!document.getElementById('g88x-part2-style')) {
+    const style = document.createElement('style');
+    style.id = 'g88x-part2-style';
+    style.textContent = css;
+    document.head.appendChild(style);
+  }
+
+  G88X.ui.injectBackdrop = function injectBackdrop() {
+    if (document.getElementById('g88x-viewport-backdrop')) return;
+
+    const backdrop = document.createElement('div');
+    backdrop.id = 'g88x-viewport-backdrop';
+    backdrop.style.position = 'fixed';
+    backdrop.style.inset = '0';
+    backdrop.style.pointerEvents = 'none';
+    backdrop.style.zIndex = '0';
+    backdrop.innerHTML = `
+      <div class="g88x-viewport-orb orb-a"></div>
+      <div class="g88x-viewport-orb orb-b"></div>
+      <div class="g88x-viewport-orb orb-c"></div>
+      <div class="g88x-viewport-grid"></div>
+    `;
+    document.body.appendChild(backdrop);
+  };
+
+  G88X.ui.injectExtraCss = function injectExtraCss() {
+    if (document.getElementById('g88x-part2-extra-style')) return;
+    const extra = document.createElement('style');
+    extra.id = 'g88x-part2-extra-style';
+    extra.textContent = `
+      #g88x-viewport-backdrop .g88x-viewport-orb{
+        position:absolute;
+        border-radius:50%;
+        filter: blur(18px);
+        opacity:.8;
+        mix-blend-mode: screen;
+        animation: g88xOrbFloat 11s ease-in-out infinite alternate;
+      }
+      #g88x-viewport-backdrop .orb-a{
+        width:220px;height:220px;left:-40px;top:18%;
+        background: radial-gradient(circle, rgba(255,215,106,.22), transparent 65%);
+      }
+      #g88x-viewport-backdrop .orb-b{
+        width:320px;height:320px;right:-70px;top:8%;
+        background: radial-gradient(circle, rgba(76,231,255,.14), transparent 68%);
+        animation-duration: 14s;
+      }
+      #g88x-viewport-backdrop .orb-c{
+        width:280px;height:280px;left:26%;bottom:-80px;
+        background: radial-gradient(circle, rgba(197,140,255,.15), transparent 68%);
+        animation-duration: 16s;
+      }
+      #g88x-viewport-backdrop .g88x-viewport-grid{
+        position:absolute;inset:0;
+        background:
+          linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+        background-size: 74px 74px;
+        mask-image: radial-gradient(circle at 50% 30%, #000 0 42%, transparent 82%);
+        opacity:.24;
+      }
+      @keyframes g88xOrbFloat{
+        0%{ transform: translate3d(0,0,0) scale(1); }
+        100%{ transform: translate3d(16px,-10px,0) scale(1.06); }
+      }
+    `;
+    document.head.appendChild(extra);
+  };
+
+  G88X.ui.decorateBody = function decorateBody() {
+    document.body.classList.add('g88x-scanline');
+    document.body.style.minHeight = '100vh';
+  };
+
+  G88X.ui.decoratePanels = function decoratePanels() {
+    const app = document.getElementById('app');
+    if (app) {
+      app.classList.add('g88x-vip-shell');
+      app.style.borderRadius = '32px';
+      app.style.margin = '0 auto';
+      app.style.overflow = 'hidden';
+    }
+  };
+
+  G88X.ui.injectHelpers = function injectHelpers() {
+    if (document.getElementById('g88x-ui-helpers')) return;
+    const holder = document.createElement('div');
+    holder.id = 'g88x-ui-helpers';
+    holder.style.display = 'none';
+    holder.innerHTML = `
+      <div class="g88x-3d-stage"></div>
+      <div class="g88x-modal"></div>
+      <div class="g88x-modal-card"></div>
+      <div class="g88x-vip-card"><div class="g88x-card-glow"></div></div>
+      <div class="g88x-lux-panel"></div>
+      <div class="g88x-mini-stat"></div>
+      <div class="g88x-toast success"></div>
+      <div class="g88x-toast error"></div>
+      <div class="g88x-toast info"></div>
+    `;
+    document.body.appendChild(holder);
+  };
+
+  G88X.ui.hookVue = function hookVue() {
+    const patch = () => {
+      const app = document.getElementById('app');
+      if (app) {
+        app.classList.add('g88x-press');
+        G88X.ui.decoratePanels();
+      }
+    };
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', patch, { once: true });
+    } else {
+      patch();
+    }
+  };
+
+  G88X.ui.startAmbient = function startAmbient() {
+    G88X.fx.start();
+    const loop = () => {
+      if (G88X.fx && G88X.fx.particles && G88X.fx.particles.length) {
+        requestAnimationFrame(loop);
+      }
+    };
+    loop();
+  };
+
+  G88X.ui.bind = function bind() {
+    G88X.ui.injectBackdrop();
+    G88X.ui.injectExtraCss();
+    G88X.ui.decorateBody();
+    G88X.ui.injectHelpers();
+    G88X.ui.hookVue();
+    G88X.ui.startAmbient();
+  };
+
+  G88X.ui.createWindowShell = function createWindowShell({ title, subtitle, accent = 'gold' } = {}) {
+    const accentClass = {
+      gold: 'g88x-text-gold',
+      cyan: 'g88x-text-cyan',
+      violet: 'g88x-text-violet',
+      red: 'text-[#ff5e78]',
+      green: 'text-[#4cffb5]'
+    }[accent] || 'g88x-text-gold';
+
+    return `
+      <div class="g88x-modal-card">
+        <div class="p-5 sm:p-6">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <div class="g88x-chip mb-3">VIP 3D PRO</div>
+              <h2 class="text-2xl sm:text-3xl font-black tracking-wider uppercase ${accentClass}">${title || 'GAME'}</h2>
+              <p class="g88x-subtitle mt-2">${subtitle || ''}</p>
+            </div>
+            <div class="g88x-chip g88x-float">LIVE FX</div>
+          </div>
+          <div class="g88x-neon-line my-5"></div>
+        </div>
+      </div>
+    `;
+  };
+
+  G88X.ui.ensureToastHost = function ensureToastHost() {
+    if (document.getElementById('g88x-toast-host')) return;
+    const host = document.createElement('div');
+    host.id = 'g88x-toast-host';
+    host.className = 'g88x-toast-stack';
+    document.body.appendChild(host);
+  };
+
+  G88X.ui.toast = function toast(msg, type = 'info', ttl = 2400) {
+    G88X.ui.ensureToastHost();
+    const host = document.getElementById('g88x-toast-host');
+    const el = document.createElement('div');
+    el.className = `g88x-toast ${type}`;
+    el.textContent = msg;
+    host.appendChild(el);
+    setTimeout(() => {
+      el.style.transition = 'transform .2s ease, opacity .2s ease';
+      el.style.transform = 'translateX(12px)';
+      el.style.opacity = '0';
+      setTimeout(() => el.remove(), 220);
+    }, ttl);
+  };
+
+  G88X.ui.progress = function progress(value, max = 100) {
+    const pct = G88X.utils.clamp((Number(value || 0) / Number(max || 1)) * 100, 0, 100);
+    return `
+      <div class="w-full h-3 rounded-full overflow-hidden bg-white/5 border border-white/8">
+        <div class="h-full rounded-full bg-gradient-to-r from-[#ffd76a] via-[#4ce7ff] to-[#c58cff]" style="width:${pct}%"></div>
+      </div>
+    `;
+  };
+
+  G88X.ui.statBlock = function statBlock(label, value, accent = 'gold') {
+    const cls = accent === 'cyan'
+      ? 'g88x-text-cyan'
+      : accent === 'violet'
+        ? 'g88x-text-violet'
+        : accent === 'green'
+          ? 'text-[#4cffb5]'
+          : 'g88x-text-gold';
+
+    return `
+      <div class="g88x-mini-stat">
+        <b>${label}</b>
+        <span class="${cls}">${value}</span>
+      </div>
+    `;
+  };
+
+  G88X.ui.ready = () => {
+    G88X.ui.bind();
+    G88X.ui.ensureToastHost();
+    G88X.events.emit('part2:ready');
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', G88X.ui.ready, { once: true });
+  } else {
+    G88X.ui.ready();
+  }
+
+  G88X.events.on('part1:ready', () => {
+    G88X.ui.bind();
+  });
+})();
+</script>
+<script>
+(() => {
+  'use strict';
+
+  const G88X = window.G88X = window.G88X || {};
+  if (G88X.part3Booted) return;
+  G88X.part3Booted = true;
+
+  const S = {
+    openGame: null,
+    uiId: 'g88x-expansion-shell',
+    modalId: 'g88x-expansion-modal',
+    cardsId: 'g88x-expansion-cards',
+    styleId: 'g88x-part3-style'
+  };
+
+  const U = {
+    root() {
+      return document.getElementById('app') || document.body;
+    },
+    ensureHost() {
+      let el = document.getElementById(S.uiId);
+      if (!el) {
+        el = document.createElement('section');
+        el.id = S.uiId;
+        el.style.position = 'relative';
+        el.style.zIndex = '2';
+        el.style.margin = '24px auto 0';
+        el.style.width = 'min(1600px, calc(100vw - 24px))';
+        el.style.padding = '0 12px 28px';
+        el.innerHTML = `<div id="${S.cardsId}"></div><div id="${S.modalId}"></div>`;
+        U.root().appendChild(el);
+      }
+      return el;
+    },
+    cardsHost() {
+      U.ensureHost();
+      return document.getElementById(S.cardsId);
+    },
+    modalHost() {
+      U.ensureHost();
+      return document.getElementById(S.modalId);
+    },
+    style() {
+      if (document.getElementById(S.styleId)) return;
+      const style = document.createElement('style');
+      style.id = S.styleId;
+      style.textContent = `
+        #${S.uiId}{
+          position:relative;
+          z-index:2;
+        }
+        #${S.uiId} *{ box-sizing:border-box; }
+        #${S.uiId} .g88x-expansion-wrap{
+          padding:18px;
+          border-radius:32px;
+          background:
+            radial-gradient(circle at 20% 0%, rgba(255,215,106,.10), transparent 16%),
+            radial-gradient(circle at 80% 8%, rgba(76,231,255,.10), transparent 18%),
+            linear-gradient(180deg, rgba(8,10,20,.92), rgba(5,6,14,.96));
+          border:1px solid rgba(255,255,255,.08);
+          box-shadow: 0 30px 90px rgba(0,0,0,.35);
+          overflow:hidden;
+        }
+        #${S.uiId} .g88x-expansion-head{
+          display:flex;
+          align-items:flex-end;
+          justify-content:space-between;
+          gap:16px;
+          padding:4px 4px 18px;
+        }
+        #${S.uiId} .g88x-expansion-title{
+          font-size: clamp(22px, 3vw, 34px);
+          font-weight: 900;
+          letter-spacing:.08em;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #fff 0%, #ffd76a 35%, #b8891d 70%, #fff3c2 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        }
+        #${S.uiId} .g88x-expansion-sub{
+          color: rgba(255,255,255,.65);
+          font-size: 12px;
+          margin-top: 4px;
+          letter-spacing:.04em;
+        }
+        #${S.uiId} .g88x-expansion-balance{
+          min-width: 220px;
+          padding:14px 18px;
+          border-radius:22px;
+          background: linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
+          border:1px solid rgba(255,255,255,.09);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 18px 30px rgba(0,0,0,.18);
+        }
+        #${S.uiId} .g88x-expansion-balance b{
+          display:block;
+          font-size:11px;
+          letter-spacing:.08em;
+          color: rgba(255,255,255,.58);
+          text-transform: uppercase;
+          margin-bottom:6px;
+        }
+        #${S.uiId} .g88x-expansion-balance span{
+          font-size:28px;
+          font-weight:900;
+          color:#fff;
+        }
+        #${S.uiId} .g88x-expansion-grid{
+          display:grid;
+          grid-template-columns: repeat(4, minmax(0, 1fr));
+          gap:16px;
+        }
+        @media (max-width: 1280px){
+          #${S.uiId} .g88x-expansion-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 780px){
+          #${S.uiId} .g88x-expansion-grid{ grid-template-columns: 1fr; }
+        }
+        #${S.uiId} .g88x-game-card{
+          position:relative;
+          border-radius:26px;
+          overflow:hidden;
+          padding:18px;
+          min-height: 176px;
+          cursor:pointer;
+          background:
+            radial-gradient(circle at 20% 0%, rgba(255,255,255,.06), transparent 16%),
+            linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+          box-shadow: 0 16px 36px rgba(0,0,0,.22);
+          transition: transform .22s ease, box-shadow .22s ease, filter .22s ease;
+        }
+        #${S.uiId} .g88x-game-card:hover{
+          transform: translateY(-3px) perspective(900px) rotateX(2deg);
+          box-shadow: 0 24px 58px rgba(0,0,0,.34);
+          filter: saturate(1.05);
+        }
+        #${S.uiId} .g88x-game-card::before{
+          content:'';
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background:
+            radial-gradient(circle at 20% 20%, rgba(255,215,106,.18), transparent 22%),
+            radial-gradient(circle at 90% 0%, rgba(76,231,255,.12), transparent 18%),
+            radial-gradient(circle at 50% 100%, rgba(197,140,255,.12), transparent 24%);
+          opacity:.8;
+        }
+        #${S.uiId} .g88x-game-top{
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:12px;
+          position:relative;
+          z-index:1;
+        }
+        #${S.uiId} .g88x-game-emoji{
+          width:52px;height:52px;
+          border-radius:18px;
+          display:grid;
+          place-items:center;
+          font-size:26px;
+          background: linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 12px 20px rgba(0,0,0,.18);
+        }
+        #${S.uiId} .g88x-game-title{
+          font-size:16px;
+          font-weight:900;
+          letter-spacing:.05em;
+          text-transform:uppercase;
+          color:#fff;
+          margin:0;
+        }
+        #${S.uiId} .g88x-game-desc{
+          color: rgba(255,255,255,.62);
+          font-size:12px;
+          margin-top:8px;
+          line-height:1.45;
+        }
+        #${S.uiId} .g88x-tag{
+          display:inline-flex;
+          align-items:center;
+          gap:6px;
+          margin-top:12px;
+          padding:7px 10px;
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(0,0,0,.18);
+          color: rgba(255,255,255,.92);
+          font-size:11px;
+          font-weight:800;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+        }
+        #${S.uiId} .g88x-modal-backdrop{
+          position:fixed;
+          inset:0;
+          z-index:200;
+          background: rgba(0,0,0,.72);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding:20px;
+        }
+        #${S.uiId} .g88x-modal-card{
+          width:min(1080px, 96vw);
+          border-radius:32px;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 20% 0%, rgba(255,215,106,.10), transparent 18%),
+            radial-gradient(circle at 100% 20%, rgba(76,231,255,.08), transparent 18%),
+            linear-gradient(180deg, rgba(11,12,24,.98), rgba(5,6,14,.98));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: 0 34px 120px rgba(0,0,0,.58);
+        }
+        #${S.uiId} .g88x-modal-head{
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:16px;
+          padding:22px 22px 0;
+        }
+        #${S.uiId} .g88x-modal-title{
+          font-size: clamp(22px, 2.6vw, 30px);
+          font-weight: 900;
+          letter-spacing:.08em;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #fff 0%, #ffd76a 45%, #fff3c2 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        }
+        #${S.uiId} .g88x-modal-sub{
+          color: rgba(255,255,255,.64);
+          font-size:12px;
+          line-height:1.5;
+          margin-top:6px;
+        }
+        #${S.uiId} .g88x-modal-close{
+          width:42px;height:42px;
+          border-radius:14px;
+          cursor:pointer;
+          display:grid;
+          place-items:center;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(255,255,255,.05);
+          color:#fff;
+          font-size:20px;
+          line-height:1;
+        }
+        #${S.uiId} .g88x-modal-body{
+          padding:18px 22px 22px;
+        }
+        #${S.uiId} .g88x-modal-grid{
+          display:grid;
+          grid-template-columns: 1.1fr .9fr;
+          gap:18px;
+        }
+        @media (max-width: 980px){
+          #${S.uiId} .g88x-modal-grid{ grid-template-columns:1fr; }
+        }
+        #${S.uiId} .g88x-panel{
+          position:relative;
+          border-radius:24px;
+          background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+          overflow:hidden;
+        }
+        #${S.uiId} .g88x-panel-pad{ padding:18px; }
+        #${S.uiId} .g88x-panel::before{
+          content:'';
+          position:absolute;
+          inset:0;
+          background:
+            radial-gradient(circle at 15% 0%, rgba(255,215,106,.12), transparent 20%),
+            radial-gradient(circle at 85% 0%, rgba(76,231,255,.10), transparent 18%);
+          pointer-events:none;
+        }
+        #${S.uiId} .g88x-row{
+          display:flex;
+          gap:12px;
+          flex-wrap:wrap;
+          align-items:center;
+        }
+        #${S.uiId} .g88x-btn{
+          position:relative;
+          border:none;
+          outline:none;
+          border-radius:16px;
+          padding:11px 16px;
+          font-weight:900;
+          letter-spacing:.06em;
+          text-transform:uppercase;
+          color:#0a0c13;
+          background: linear-gradient(135deg, #fff 0%, #ffd76a 45%, #b8891d 100%);
+          box-shadow: 0 14px 32px rgba(255,215,106,.14), inset 0 1px 0 rgba(255,255,255,.68);
+          cursor:pointer;
+          transition: transform .18s ease, filter .18s ease;
+        }
+        #${S.uiId} .g88x-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+        #${S.uiId} .g88x-btn:active{ transform: translateY(1px); }
+        #${S.uiId} .g88x-btn-ghost{
+          color:#fff;
+          background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: 0 10px 26px rgba(0,0,0,.20);
+        }
+        #${S.uiId} .g88x-input,
+        #${S.uiId} .g88x-select{
+          width:100%;
+          border-radius:16px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(255,255,255,.04);
+          color:#fff;
+          outline:none;
+          padding:12px 14px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+        }
+        #${S.uiId} .g88x-input::placeholder{ color: rgba(255,255,255,.34); }
+        #${S.uiId} .g88x-input:focus,
+        #${S.uiId} .g88x-select:focus{
+          border-color: rgba(255,215,106,.55);
+          box-shadow: 0 0 0 3px rgba(255,215,106,.10), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        #${S.uiId} .g88x-divider-line{
+          height:1px;
+          margin:14px 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+        }
+        #${S.uiId} .g88x-stage{
+          position:relative;
+          min-height: 420px;
+          border-radius:24px;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 50% 20%, rgba(255,215,106,.08), transparent 24%),
+            radial-gradient(circle at 20% 80%, rgba(76,231,255,.08), transparent 20%),
+            linear-gradient(180deg, rgba(8,10,18,.96), rgba(4,5,11,.98));
+          border:1px solid rgba(255,255,255,.08);
+        }
+        #${S.uiId} .g88x-stage::after{
+          content:'';
+          position:absolute;
+          inset:0;
+          background: linear-gradient(120deg, transparent 0 45%, rgba(255,255,255,.05) 50%, transparent 55%);
+          opacity:.42;
+          pointer-events:none;
+        }
+        #${S.uiId} .g88x-chip{
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+          padding:7px 10px;
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(0,0,0,.18);
+          color:#fff;
+          font-size:11px;
+          font-weight:900;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+        }
+        #${S.uiId} .g88x-grid-2{
+          display:grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap:12px;
+        }
+        #${S.uiId} .g88x-grid-3{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap:12px;
+        }
+        @media (max-width: 720px){
+          #${S.uiId} .g88x-grid-2,
+          #${S.uiId} .g88x-grid-3{ grid-template-columns:1fr; }
+        }
+        #${S.uiId} .g88x-squeeze-card{
+          position:absolute;
+          top:50%;
+          transform: translateY(-50%);
+          width:120px;
+          height:180px;
+          border-radius:16px;
+          border:1px solid rgba(255,255,255,.08);
+          background:
+            linear-gradient(180deg, rgba(255,255,255,.10), rgba(255,255,255,.02)),
+            linear-gradient(180deg, rgba(24,26,38,.98), rgba(10,12,20,.98));
+          box-shadow: 0 18px 34px rgba(0,0,0,.26);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          font-size:12px;
+          font-weight:900;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+          overflow:hidden;
+          will-change: transform;
+          transition: transform .18s ease, box-shadow .18s ease;
+        }
+        #${S.uiId} .g88x-squeeze-card::before{
+          content:'';
+          position:absolute;
+          inset:-30%;
+          background: radial-gradient(circle, rgba(255,255,255,.14), transparent 50%);
+          opacity:.7;
+        }
+        #${S.uiId} .g88x-card-edge{
+          position:absolute;
+          inset:8px;
+          border-radius:12px;
+          border:1px solid rgba(255,255,255,.10);
+        }
+        #${S.uiId} .g88x-card-sheen{
+          position:absolute;
+          inset:0;
+          background: linear-gradient(120deg, transparent 0 42%, rgba(255,255,255,.26) 50%, transparent 58%);
+          opacity:.45;
+          mix-blend-mode:screen;
+        }
+        #${S.uiId} .g88x-card-name{
+          position:relative;
+          z-index:1;
+          color:#fff;
+          text-shadow:0 0 14px rgba(255,255,255,.16);
+        }
+        #${S.uiId} .g88x-dice{
+          width: 58px;
+          height: 58px;
+          border-radius: 16px;
+          background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(240,240,255,.92));
+          border:1px solid rgba(0,0,0,.12);
+          box-shadow: 0 14px 26px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.76);
+          position:relative;
+        }
+        #${S.uiId} .g88x-pip{
+          position:absolute;
+          width:9px;
+          height:9px;
+          border-radius:50%;
+          background:#121212;
+          box-shadow: inset 0 0 0 1px rgba(255,255,255,.05);
+        }
+        #${S.uiId} .g88x-led{
+          border-radius:999px;
+          padding:6px 10px;
+          font-size:11px;
+          font-weight:900;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          border:1px solid rgba(255,255,255,.12);
+          background: rgba(255,255,255,.04);
+        }
+        #${S.uiId} .g88x-led.red{ color:#ff5e78; }
+        #${S.uiId} .g88x-led.cyan{ color:#4ce7ff; }
+        #${S.uiId} .g88x-led.gold{ color:#ffd76a; }
+        #${S.uiId} .g88x-led.green{ color:#4cffb5; }
+        #${S.uiId} .g88x-skyline{
+          position:absolute;
+          left:0;
+          right:0;
+          bottom:0;
+          height:120px;
+          pointer-events:none;
+          opacity:.4;
+          background:
+            linear-gradient(180deg, transparent, rgba(0,0,0,.35)),
+            repeating-linear-gradient(90deg, rgba(255,255,255,.05) 0 2px, transparent 2px 22px);
+          mask-image: linear-gradient(to top, #000 0, transparent 100%);
+        }
+        #${S.uiId} .g88x-sweep{
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background:
+            radial-gradient(circle at 50% 50%, transparent 0 45%, rgba(76,231,255,.06) 70%, transparent 100%);
+          animation:g88xSweep 6s linear infinite;
+        }
+        @keyframes g88xSweep{
+          0%{ transform: translateX(-8%) rotate(0deg); opacity:.2; }
+          50%{ opacity:.55; }
+          100%{ transform: translateX(8%) rotate(360deg); opacity:.2; }
+        }
+        #${S.uiId} .g88x-divider{
+          height:1px;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+          margin:14px 0;
+        }
+        #${S.uiId} .g88x-stat-grid{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap:12px;
+        }
+        @media (max-width: 640px){
+          #${S.uiId} .g88x-stat-grid{ grid-template-columns:1fr; }
+        }
+        #${S.uiId} .g88x-stat{
+          padding:14px 16px;
+          border-radius:18px;
+          background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+        }
+        #${S.uiId} .g88x-stat b{
+          display:block;
+          color:rgba(255,255,255,.58);
+          font-size:11px;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          margin-bottom:6px;
+        }
+        #${S.uiId} .g88x-stat span{
+          font-size:18px;
+          font-weight:900;
+          color:#fff;
+        }
+        @keyframes g88xTwinkle{
+          from{ transform: scale(.85); opacity:.25; }
+          to{ transform: scale(1.3); opacity:1; }
+        }
+        @keyframes g88xSpin{
+          to{ transform: rotate(360deg); }
+        }
+        @keyframes g88xShake{
+          0%,100%{ transform: translate(0,0); }
+          25%{ transform: translate(-2px,2px); }
+          50%{ transform: translate(2px,-2px); }
+          75%{ transform: translate(-1px,1px); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  };
+
+  const Games = {
+    baccarat: {
+      deck: [],
+      player: [],
+      banker: [],
+      squeeze: false,
+      result: null,
+      init() {
+        this.deck = [];
+        const suits = ['♠', '♥', '♦', '♣'];
+        const vals = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        for (const s of suits) for (const v of vals) this.deck.push({ s, v });
+        this.player = [this.draw(), this.draw()];
+        this.banker = [this.draw(), this.draw()];
+        this.result = null;
+      },
+      draw() {
+        const i = Math.floor(Math.random() * this.deck.length);
+        return this.deck.splice(i, 1)[0];
+      },
+      points(hand) {
+        const score = hand.reduce((sum, c) => {
+          if (['J','Q','K','10'].includes(c.v)) return sum + 0;
+          if (c.v === 'A') return sum + 1;
+          return sum + Number(c.v);
+        }, 0);
+        return score % 10;
+      },
+      dealThird() {
+        const p = this.points(this.player);
+        const b = this.points(this.banker);
+        if (p <= 5) this.player.push(this.draw());
+        if (this.points(this.player) <= 5 && b <= 5) this.banker.push(this.draw());
+      },
+      settle() {
+        const p = this.points(this.player);
+        const b = this.points(this.banker);
+        let winner = 'Tie';
+        if (p > b) winner = 'Player';
+        if (b > p) winner = 'Banker';
+        this.result = { p, b, winner };
+        return this.result;
+      }
+    },
+    blackjack: {
+      deck: [],
+      player: [],
+      dealer: [],
+      stand: false,
+      allIn: false,
+      done: false,
+      result: null,
+      init() {
+        this.deck = [];
+        const suits = ['♠', '♥', '♦', '♣'];
+        const vals = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        for (const s of suits) for (const v of vals) this.deck.push({ s, v });
+        this.player = [this.draw(), this.draw()];
+        this.dealer = [this.draw(), this.draw()];
+        this.stand = false;
+        this.allIn = false;
+        this.done = false;
+        this.result = null;
+      },
+      draw() {
+        const i = Math.floor(Math.random() * this.deck.length);
+        return this.deck.splice(i, 1)[0];
+      },
+      score(hand) {
+        let sum = 0, aces = 0;
+        for (const c of hand) {
+          if (c.v === 'A') { aces++; sum += 11; }
+          else if (['J','Q','K'].includes(c.v)) sum += 10;
+          else sum += Number(c.v);
+        }
+        while (sum > 21 && aces > 0) { sum -= 10; aces--; }
+        return sum;
+      },
+      hit() {
+        if (this.done) return;
+        this.player.push(this.draw());
+      },
+      dealerPlay() {
+        while (this.score(this.dealer) < 17) this.dealer.push(this.draw());
+      },
+      settle() {
+        this.dealerPlay();
+        const p = this.score(this.player);
+        const d = this.score(this.dealer);
+        let winner = 'Dealer';
+        if (p > 21) winner = 'Dealer';
+        else if (d > 21) winner = 'Player';
+        else if (p > d) winner = 'Player';
+        else if (d > p) winner = 'Dealer';
+        else winner = 'Push';
+        this.done = true;
+        this.result = { p, d, winner };
+        return this.result;
+      }
+    },
+    craps: {
+      dice: [1, 1],
+      result: null,
+      roll() {
+        this.dice = [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)];
+        const sum = this.dice[0] + this.dice[1];
+        let state = 'field';
+        if ([7,11].includes(sum)) state = 'pass';
+        else if ([2,3,12].includes(sum)) state = 'craps';
+        this.result = { sum, state };
+        return this.result;
+      }
+    },
+    sicbo: {
+      dice: [1, 1, 1],
+      result: null,
+      roll() {
+        this.dice = [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)];
+        const sum = this.dice.reduce((a,b)=>a+b, 0);
+        const tai = sum >= 11;
+        this.result = { sum, tai };
+        return this.result;
+      }
+    },
+    wheel: {
+      segments: [2, 5, 10, 50, 2, 5, 10, 50],
+      angle: 0,
+      spinning: false,
+      result: null,
+      spin() {
+        this.spinning = true;
+        const spins = 4 + Math.random() * 3;
+        const targetIndex = Math.floor(Math.random() * this.segments.length);
+        const targetAngle = (360 / this.segments.length) * targetIndex;
+        this.angle += spins * 360 + targetAngle + (Math.random() * 24 - 12);
+        this.result = this.segments[targetIndex];
+        setTimeout(() => { this.spinning = false; }, 2200);
+        return this.result;
+      }
+    },
+    vault: {
+      dials: [0, 0, 0],
+      target: [1, 7, 5],
+      opened: false,
+      result: null,
+      spin() {
+        this.dials = [Math.floor(Math.random() * 10), Math.floor(Math.random() * 10), Math.floor(Math.random() * 10)];
+        const key = this.dials.join('');
+        const open = key === this.target.join('');
+        this.opened = open;
+        this.result = { key, open };
+        return this.result;
+      }
+    },
+    gravity: {
+      target: [],
+      spinning: false,
+      result: null,
+      spin() {
+        const picks = [];
+        while (picks.length < 3) {
+          const n = 1 + Math.floor(Math.random() * 36);
+          if (!picks.includes(n)) picks.push(n);
+        }
+        this.target = picks;
+        this.result = { picks };
+        return this.result;
+      }
+    }
+  };
+
+  const VIEW = {
+    renderShell() {
+      const balance = Number(G88X.state?.balance || 0).toLocaleString('vi-VN');
+      U.cardsHost().innerHTML = `
+        <div class="g88x-expansion-wrap">
+          <div class="g88x-expansion-head">
+            <div>
+              <div class="g88x-expansion-title">VIP 3D Expansion</div>
+              <div class="g88x-expansion-sub">Baccarat Imperial Squeeze · Blackjack Onyx · Craps 3D Physics · Sicbo Matrix · Cyber Wheel · Hacker's Vault · Gravity Roulette</div>
+            </div>
+            <div class="g88x-expansion-balance">
+              <b>Coin ảo hiện có</b>
+              <span>${balance}</span>
+            </div>
+          </div>
+
+          <div class="g88x-divider"></div>
+
+          <div class="g88x-expansion-grid">
+            ${VIEW.card('baccarat', '🂡', 'Baccarat Imperial Squeeze', 'No Commission · nặn bài vật lý · viền vàng khi ra 8/9', 'gold')}
+            ${VIEW.card('blackjack', '🖤', 'Blackjack Onyx', 'Black table · Onyx chip · spotlight khi all-in', 'cyan')}
+            ${VIEW.card('craps', '🎲', 'Craps 3D Physics', 'Xúc xắc nảy theo physics, camera bám theo viên xúc xắc', 'violet')}
+            ${VIEW.card('sicbo', '🎯', 'Sicbo Matrix', 'Lồng kính trong suốt · LED xanh/đỏ · lắc 3 xí ngầu', 'green')}
+            ${VIEW.card('wheel', '🌀', 'Cyber Wheel', 'Vòng quay neon x2 x5 x10 x50 · bass drop', 'gold')}
+            ${VIEW.card('vault', '🗝️', "The Hacker's Vault", 'Két titan 3 số · mở tung phát sáng vàng', 'cyan')}
+            ${VIEW.card('gravity', '🪐', 'Gravity Roulette', '3 bóng cùng lúc · vô trọng lực · hút từ tính', 'violet')}
+          </div>
+        </div>
+      `;
+      U.cardsHost().querySelectorAll('[data-game]').forEach(el => {
+        el.addEventListener('click', () => VIEW.open(el.getAttribute('data-game')));
+      });
+    },
+    card(id, emoji, title, desc, accent) {
+      return `
+        <article class="g88x-game-card" data-game="${id}">
+          <div class="g88x-game-top">
+            <div class="g88x-game-emoji">${emoji}</div>
+            <div class="g88x-chip">${accent.toUpperCase()}</div>
+          </div>
+          <div style="position:relative; z-index:1; margin-top:14px;">
+            <h3 class="g88x-game-title">${title}</h3>
+            <p class="g88x-game-desc">${desc}</p>
+            <div class="g88x-tag">Mở giao diện</div>
+          </div>
+        </article>
+      `;
+    },
+    open(id) {
+      S.openGame = id;
+      VIEW.mountModal();
+      if (G88X.audio && G88X.audio.click) G88X.audio.click();
+      if (G88X.fx && G88X.fx.flash) G88X.fx.flash('rgba(255,215,106,.08)', 180);
+    },
+    close() {
+      S.openGame = null;
+      U.modalHost().innerHTML = '';
+    },
+    mountModal() {
+      const id = S.openGame;
+      if (!id) return VIEW.close();
+
+      if (id === 'baccarat' && !Games.baccarat.player.length) Games.baccarat.init();
+      if (id === 'blackjack' && !Games.blackjack.player.length) Games.blackjack.init();
+      if (id === 'craps' && !Games.craps.result) Games.craps.roll();
+      if (id === 'sicbo' && !Games.sicbo.result) Games.sicbo.roll();
+      if (id === 'wheel' && !Games.wheel.result) Games.wheel.spin();
+      if (id === 'vault' && !Games.vault.result) Games.vault.spin();
+      if (id === 'gravity' && !Games.gravity.result) Games.gravity.spin();
+
+      const htmlMap = {
+        baccarat: VIEW.modalBaccarat(),
+        blackjack: VIEW.modalBlackjack(),
+        craps: VIEW.modalCraps(),
+        sicbo: VIEW.modalSicbo(),
+        wheel: VIEW.modalWheel(),
+        vault: VIEW.modalVault(),
+        gravity: VIEW.modalGravity()
+      };
+
+      U.modalHost().innerHTML = htmlMap[id] || '';
+      const host = U.modalHost();
+
+      host.querySelectorAll('[data-close]').forEach(el => {
+        el.addEventListener('click', VIEW.close);
+      });
+
+      host.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => VIEW.action(id, btn.getAttribute('data-action')));
+      });
+
+      host.querySelector('[data-roll]')?.addEventListener('click', () => VIEW.action(id, 'roll'));
+      host.querySelector('[data-spin]')?.addEventListener('click', () => VIEW.action(id, 'spin'));
+      host.querySelector('[data-hit]')?.addEventListener('click', () => VIEW.action(id, 'hit'));
+      host.querySelector('[data-stand]')?.addEventListener('click', () => VIEW.action(id, 'stand'));
+      host.querySelector('[data-allin]')?.addEventListener('click', () => VIEW.action(id, 'allin'));
+      host.querySelector('[data-squeeze]')?.addEventListener('click', () => VIEW.action(id, 'squeeze'));
+      host.querySelector('[data-deal]')?.addEventListener('click', () => VIEW.action(id, 'deal'));
+    },
+    modalBaccarat() {
+      const g = Games.baccarat;
+      const p = g.points(g.player);
+      const b = g.points(g.banker);
+      return `
+        <div class="g88x-modal-backdrop" data-close>
+          <div class="g88x-modal-card" onclick="event.stopPropagation()">
+            <div class="g88x-modal-head">
+              <div>
+                <div class="g88x-chip">Baccarat No Commission</div>
+                <div class="g88x-modal-title">Baccarat Imperial Squeeze</div>
+                <div class="g88x-modal-sub">Nặn mép bài theo kiểu first-person 3D. Khi ra bài đẹp 8/9 sẽ lóe viền vàng.</div>
+              </div>
+              <button class="g88x-modal-close" data-close>×</button>
+            </div>
+            <div class="g88x-modal-body">
+              <div class="g88x-modal-grid">
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stage" style="min-height:380px;">
+                    <div class="g88x-sweep"></div>
+                    <div class="g88x-skyline"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-row">
+                        <span class="g88x-chip">Player ${p}</span>
+                        <span class="g88x-chip">Banker ${b}</span>
+                        <span class="g88x-chip">${g.squeeze ? 'Squeeze ON' : 'Squeeze OFF'}</span>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div style="display:flex; gap:18px; justify-content:space-between; align-items:center; min-height:240px;">
+                        <div style="position:relative; width:50%; min-height:220px;">
+                          ${g.player.map((c,i)=>`
+                            <div class="g88x-squeeze-card" style="left:${i*72}px; transform:${g.squeeze ? `translateY(-50%) rotate(${i*7-4}deg) skewY(${i ? -4 : 3}deg) scaleY(${g.squeeze ? 1.12 : .96})` : `translateY(-50%) rotate(${i*4-2}deg)`}; ${p>=8 ? 'box-shadow:0 0 28px rgba(255,215,106,.2), 0 18px 34px rgba(0,0,0,.26);' : ''}">
+                              <div class="g88x-card-edge"></div>
+                              <div class="g88x-card-sheen"></div>
+                              <div class="g88x-card-name">${c.v}${c.s}</div>
+                            </div>
+                          `).join('')}
+                        </div>
+                        <div style="position:relative; width:50%; min-height:220px;">
+                          ${g.banker.map((c,i)=>`
+                            <div class="g88x-squeeze-card" style="right:${i*72}px; left:auto; transform:${g.squeeze ? `translateY(-50%) rotate(${i*-7+4}deg) skewY(${i ? 4 : -3}deg) scaleY(${g.squeeze ? 1.12 : .96})` : `translateY(-50%) rotate(${i*-4+2}deg)`}; ${b>=8 ? 'box-shadow:0 0 28px rgba(255,215,106,.2), 0 18px 34px rgba(0,0,0,.26);' : ''}">
+                              <div class="g88x-card-edge"></div>
+                              <div class="g88x-card-sheen"></div>
+                              <div class="g88x-card-name">${c.v}${c.s}</div>
+                            </div>
+                          `).join('')}
+                        </div>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-row">
+                        <button class="g88x-btn" data-squeeze>${g.squeeze ? 'Bẻ mép bài' : 'Bật nặn bài'}</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-deal>Rút lá 3 nếu cần</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-action="settle">Mở kết quả</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stat-grid">
+                    <div class="g88x-stat"><b>Player</b><span>${p}</span></div>
+                    <div class="g88x-stat"><b>Banker</b><span>${b}</span></div>
+                    <div class="g88x-stat"><b>Trạng thái</b><span>${g.result ? g.result.winner : 'Ready'}</span></div>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-panel g88x-panel-pad">
+                    <div class="g88x-modal-sub">Luật gợi ý: so điểm 0–9, lá đẹp 8/9 được nhấn sáng vàng. Hiệu ứng squeeze chỉ là mô phỏng giao diện.</div>
+                    <div class="g88x-divider-line"></div>
+                    <div class="g88x-row">
+                      <span class="g88x-led gold">Player</span>
+                      <span class="g88x-led cyan">Banker</span>
+                      <span class="g88x-led green">No Fee</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalBlackjack() {
+      const g = Games.blackjack;
+      return `
+        <div class="g88x-modal-backdrop" data-close>
+          <div class="g88x-modal-card" onclick="event.stopPropagation()">
+            <div class="g88x-modal-head">
+              <div>
+                <div class="g88x-chip">High Roller Table</div>
+                <div class="g88x-modal-title">Blackjack Onyx</div>
+                <div class="g88x-modal-sub">Bàn nhung đen tuyền, chip Onyx viền vàng, spotlight khi all-in.</div>
+              </div>
+              <button class="g88x-modal-close" data-close>×</button>
+            </div>
+            <div class="g88x-modal-body">
+              <div class="g88x-modal-grid">
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stage" style="min-height:380px; ${g.allIn ? 'filter:brightness(.48);' : ''}">
+                    <div class="g88x-sweep"></div>
+                    <div style="position:absolute; inset:0; ${g.allIn ? 'background: radial-gradient(circle at 50% 18%, rgba(255,255,255,.28), transparent 28%);' : 'background: radial-gradient(circle at 50% 18%, rgba(255,255,255,.08), transparent 26%);'}"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-row">
+                        <span class="g88x-chip">Player ${g.score(g.player)}</span>
+                        <span class="g88x-chip">Dealer ${g.score(g.dealer)}</span>
+                        <span class="g88x-chip">${g.allIn ? 'SPOTLIGHT ON' : 'TABLE LIT'}</span>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-grid-2">
+                        <div>
+                          <div class="g88x-chip mb-2">Player Hand</div>
+                          <div class="g88x-row">
+                            ${g.player.map(c => `<div class="g88x-squeeze-card" style="position:relative; top:auto; transform:none; width:90px;height:126px; margin-right:6px;"><div class="g88x-card-edge"></div><div class="g88x-card-sheen"></div><div class="g88x-card-name">${c.v}${c.s}</div></div>`).join('')}
+                          </div>
+                        </div>
+                        <div>
+                          <div class="g88x-chip mb-2">Dealer Hand</div>
+                          <div class="g88x-row">
+                            ${g.dealer.map(c => `<div class="g88x-squeeze-card" style="position:relative; top:auto; transform:none; width:90px;height:126px; margin-right:6px;"><div class="g88x-card-edge"></div><div class="g88x-card-sheen"></div><div class="g88x-card-name">${c.v}${c.s}</div></div>`).join('')}
+                          </div>
+                        </div>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-row">
+                        <button class="g88x-btn" data-hit>Hit</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-stand>Stand</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-allin>All-in</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-action="settle">Mở bài</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stat-grid">
+                    <div class="g88x-stat"><b>Player</b><span>${g.score(g.player)}</span></div>
+                    <div class="g88x-stat"><b>Dealer</b><span>${g.score(g.dealer)}</span></div>
+                    <div class="g88x-stat"><b>Kết quả</b><span>${g.result ? g.result.winner : 'Ready'}</span></div>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-panel g88x-panel-pad">
+                    <div class="g88x-modal-sub">Onyx chip, nhung đen, spotlight. Khi All-in bàn tối lại để tăng cảm giác áp lực.</div>
+                    <div class="g88x-divider-line"></div>
+                    <div class="g88x-row">
+                      <span class="g88x-led red">Dark Table</span>
+                      <span class="g88x-led gold">High Roller</span>
+                      <span class="g88x-led cyan">VIP Pressure</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalCraps() {
+      const g = Games.craps;
+      return `
+        <div class="g88x-modal-backdrop" data-close>
+          <div class="g88x-modal-card" onclick="event.stopPropagation()">
+            <div class="g88x-modal-head">
+              <div>
+                <div class="g88x-chip">3D Physics</div>
+                <div class="g88x-modal-title">Craps 3D Physics</div>
+                <div class="g88x-modal-sub">Camera bám theo xúc xắc, nảy tự nhiên, Pass Line ăn sáng đèn.</div>
+              </div>
+              <button class="g88x-modal-close" data-close>×</button>
+            </div>
+            <div class="g88x-modal-body">
+              <div class="g88x-modal-grid">
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stage" style="min-height:380px;">
+                    <div class="g88x-sweep"></div>
+                    <div class="p-4">
+                      <div class="g88x-row">
+                        <span class="g88x-chip">Dice ${g.dice[0]} · ${g.dice[1]}</span>
+                        <span class="g88x-chip">Sum ${g.result?.sum ?? 0}</span>
+                        <span class="g88x-chip">${g.result?.state?.toUpperCase() ?? 'READY'}</span>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div style="display:flex; align-items:center; justify-content:center; gap:22px; min-height:240px;">
+                        ${U.createDie(g.dice[0], 'translateY(-3px) rotate(-8deg)')}
+                        ${U.createDie(g.dice[1], 'translateY(4px) rotate(6deg)')}
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-row">
+                        <button class="g88x-btn" data-roll>Lắc lại</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-action="settle">Chốt Pass Line</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stat-grid">
+                    <div class="g88x-stat"><b>Die 1</b><span>${g.dice[0]}</span></div>
+                    <div class="g88x-stat"><b>Die 2</b><span>${g.dice[1]}</span></div>
+                    <div class="g88x-stat"><b>Pass</b><span>${g.result?.state === 'pass' ? 'YES' : 'NO'}</span></div>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-panel g88x-panel-pad">
+                    <div class="g88x-modal-sub">Bản mô phỏng 3D physics: hai viên xúc xắc nảy, sum hiển thị theo logic Pass Line / Craps.</div>
+                    <div class="g88x-divider-line"></div>
+                    <div class="g88x-row">
+                      <span class="g88x-led cyan">Camera follow</span>
+                      <span class="g88x-led gold">Bouncy roll</span>
+                      <span class="g88x-led green">LED celebrate</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalSicbo() {
+      const g = Games.sicbo;
+      return `
+        <div class="g88x-modal-backdrop" data-close>
+          <div class="g88x-modal-card" onclick="event.stopPropagation()">
+            <div class="g88x-modal-head">
+              <div>
+                <div class="g88x-chip">Matrix Dome</div>
+                <div class="g88x-modal-title">Sicbo Matrix</div>
+                <div class="g88x-modal-sub">Lồng kính trong suốt, 3 xí ngầu rung lanh canh, LED xanh/đỏ đổi trạng thái.</div>
+              </div>
+              <button class="g88x-modal-close" data-close>×</button>
+            </div>
+            <div class="g88x-modal-body">
+              <div class="g88x-modal-grid">
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stage" style="min-height:380px;">
+                    <div class="g88x-sweep"></div>
+                    <div class="p-4">
+                      <div class="g88x-row">
+                        <span class="g88x-chip">Dice ${g.dice.join(' · ')}</span>
+                        <span class="g88x-chip">Sum ${g.result?.sum ?? 0}</span>
+                        <span class="g88x-chip">${g.result?.tai ? 'TÀI' : 'XỈU'}</span>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div style="display:flex; align-items:center; justify-content:center; gap:16px; min-height:240px;">
+                        ${U.createDie(g.dice[0], 'rotate(-5deg)')}
+                        ${U.createDie(g.dice[1], 'translateY(-8px)')}
+                        ${U.createDie(g.dice[2], 'rotate(7deg)')}
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-row">
+                        <button class="g88x-btn" data-roll>Lắc bát kính</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-action="settle">Mở kết quả</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stat-grid">
+                    <div class="g88x-stat"><b>Sum</b><span>${g.result?.sum ?? 0}</span></div>
+                    <div class="g88x-stat"><b>Mode</b><span>${g.result?.tai ? 'Tài' : 'Xỉu'}</span></div>
+                    <div class="g88x-stat"><b>Glass</b><span>ON</span></div>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-row">
+                    <span class="g88x-led red">LED đỏ</span>
+                    <span class="g88x-led cyan">LED xanh</span>
+                    <span class="g88x-led gold">Matrix dome</span>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-modal-sub">Tài = đỏ, Xỉu = xanh. Mô phỏng rung và ánh sáng theo đúng vibe “siêu động”.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalWheel() {
+      const g = Games.wheel;
+      return `
+        <div class="g88x-modal-backdrop" data-close>
+          <div class="g88x-modal-card" onclick="event.stopPropagation()">
+            <div class="g88x-modal-head">
+              <div>
+                <div class="g88x-chip">Neon Spin</div>
+                <div class="g88x-modal-title">Cyber Wheel</div>
+                <div class="g88x-modal-sub">Vòng quay neon x2 x5 x10 x50 · bass drop lúc gần dừng.</div>
+              </div>
+              <button class="g88x-modal-close" data-close>×</button>
+            </div>
+            <div class="g88x-modal-body">
+              <div class="g88x-modal-grid">
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stage" style="min-height:380px;">
+                    <div class="g88x-sweep"></div>
+                    <div class="p-4">
+                      <div class="g88x-row">
+                        <span class="g88x-chip">Angle ${Math.round(g.angle % 360)}°</span>
+                        <span class="g88x-chip">Prize ${g.result ?? '—'}</span>
+                        <span class="g88x-chip">${g.spinning ? 'SPINNING' : 'IDLE'}</span>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div style="display:flex; align-items:center; justify-content:center; min-height:260px;">
+                        <div style="
+                          width:260px;height:260px;border-radius:50%;
+                          background: radial-gradient(circle at 50% 50%, rgba(255,255,255,.10), rgba(255,255,255,.03) 55%, rgba(0,0,0,.25) 72%),
+                                      conic-gradient(from ${g.angle}deg, #ffd76a 0 45deg, #4ce7ff 45deg 90deg, #c58cff 90deg 135deg, #ff5e78 135deg 180deg, #ffd76a 180deg 225deg, #4ce7ff 225deg 270deg, #c58cff 270deg 315deg, #ff5e78 315deg 360deg);
+                          border: 10px solid rgba(255,255,255,.12);
+                          box-shadow: 0 0 0 1px rgba(255,255,255,.08), inset 0 0 40px rgba(0,0,0,.28), 0 20px 60px rgba(0,0,0,.32);
+                          animation:${g.spinning ? 'g88xSpin 2.2s cubic-bezier(.2,.9,.1,1) infinite' : 'none'};
+                          position:relative;
+                        ">
+                          <div style="position:absolute;left:50%;top:-14px;transform:translateX(-50%);width:20px;height:34px;border-radius:10px 10px 5px 5px;background:#fff;box-shadow:0 0 16px rgba(255,255,255,.2)"></div>
+                          <div style="position:absolute;inset:18px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.18);backdrop-filter: blur(8px);">
+                            <div style="text-align:center;">
+                              <div class="g88x-chip">${g.result ?? 'x2/x5/x10/x50'}</div>
+                              <div class="g88x-modal-sub mt-2">Neon Wheel</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-row">
+                        <button class="g88x-btn" data-spin>Quay vòng</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-action="settle">Chốt kết quả</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stat-grid">
+                    <div class="g88x-stat"><b>Result</b><span>${g.result ?? '—'}</span></div>
+                    <div class="g88x-stat"><b>Status</b><span>${g.spinning ? 'Spin' : 'Ready'}</span></div>
+                    <div class="g88x-stat"><b>Style</b><span>Cyber</span></div>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-row">
+                    <span class="g88x-led gold">EDM Drop</span>
+                    <span class="g88x-led cyan">AI Dealer</span>
+                    <span class="g88x-led green">Neon Glow</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalVault() {
+      const g = Games.vault;
+      return `
+        <div class="g88x-modal-backdrop" data-close>
+          <div class="g88x-modal-card" onclick="event.stopPropagation()">
+            <div class="g88x-modal-head">
+              <div>
+                <div class="g88x-chip">Titan Door</div>
+                <div class="g88x-modal-title">The Hacker's Vault</div>
+                <div class="g88x-modal-sub">3 vòng số 0–9, mở két titan, chớp sáng vàng khi mã khớp.</div>
+              </div>
+              <button class="g88x-modal-close" data-close>×</button>
+            </div>
+            <div class="g88x-modal-body">
+              <div class="g88x-modal-grid">
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stage" style="min-height:380px;">
+                    <div class="g88x-sweep"></div>
+                    <div class="p-4">
+                      <div class="g88x-row">
+                        <span class="g88x-chip">Key ${g.dials.join('')}</span>
+                        <span class="g88x-chip">Target ${g.target.join('')}</span>
+                        <span class="g88x-chip">${g.opened ? 'OPEN' : 'LOCKED'}</span>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div style="display:flex; align-items:center; justify-content:center; gap:14px; min-height:220px;">
+                        ${g.dials.map((d,i)=>`
+                          <div style="
+                            width:82px;height:160px;border-radius:22px;
+                            background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03)),
+                                        linear-gradient(180deg, rgba(24,26,38,.98), rgba(8,10,16,.98));
+                            border:1px solid rgba(255,255,255,.10);
+                            box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 16px 32px rgba(0,0,0,.24);
+                            display:grid;place-items:center;font-size:42px;font-weight:900;color:#fff;
+                            transform: perspective(900px) rotateX(${i%2 ? 4 : -4}deg);
+                          ">
+                            ${d}
+                          </div>
+                        `).join('')}
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-row">
+                        <button class="g88x-btn" data-spin>Quay mã</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-action="settle">Mở két</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stat-grid">
+                    <div class="g88x-stat"><b>Code</b><span>${g.dials.join('')}</span></div>
+                    <div class="g88x-stat"><b>Target</b><span>${g.target.join('')}</span></div>
+                    <div class="g88x-stat"><b>Door</b><span>${g.opened ? 'OPEN' : 'LOCK'}</span></div>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-panel g88x-panel-pad">
+                    <div class="g88x-modal-sub">Nếu 3 vòng khớp mã, cửa két mở tung và bùng sáng vàng theo style cyber vault.</div>
+                    <div class="g88x-divider-line"></div>
+                    <div class="g88x-row">
+                      <span class="g88x-led cyan">Titan door</span>
+                      <span class="g88x-led gold">Gold flash</span>
+                      <span class="g88x-led green">Gear motion</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalGravity() {
+      const g = Games.gravity;
+      return `
+        <div class="g88x-modal-backdrop" data-close>
+          <div class="g88x-modal-card" onclick="event.stopPropagation()">
+            <div class="g88x-modal-head">
+              <div>
+                <div class="g88x-chip">Zero-G Orbit</div>
+                <div class="g88x-modal-title">Gravity Roulette</div>
+                <div class="g88x-modal-sub">3 bóng cùng lúc lơ lửng, sau đó bị hút vào 3 ô số bằng lực từ tính.</div>
+              </div>
+              <button class="g88x-modal-close" data-close>×</button>
+            </div>
+            <div class="g88x-modal-body">
+              <div class="g88x-modal-grid">
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stage" style="min-height:380px;">
+                    <div class="g88x-sweep"></div>
+                    <div class="p-4">
+                      <div class="g88x-row">
+                        <span class="g88x-chip">Balls ${g.target.join(' · ') || '—'}</span>
+                        <span class="g88x-chip">${g.spinning ? 'MAGNET ON' : 'ZERO G'}</span>
+                        <span class="g88x-chip">3 số cùng lúc</span>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div style="position:relative; min-height:260px; display:grid; place-items:center;">
+                        <div style="
+                          width:320px;height:320px;border-radius:50%;
+                          background:
+                            radial-gradient(circle at 50% 50%, rgba(76,231,255,.10), rgba(255,255,255,.03) 42%, rgba(0,0,0,.28) 72%),
+                            radial-gradient(circle at 50% 50%, transparent 0 48%, rgba(255,255,255,.07) 49% 50%, transparent 51% 100%);
+                          border:1px solid rgba(255,255,255,.10);
+                          box-shadow: inset 0 0 42px rgba(0,0,0,.28), 0 22px 60px rgba(0,0,0,.3);
+                          position:relative;
+                        ">
+                          ${g.target.map((n,i)=>`
+                            <div style="
+                              position:absolute;
+                              left:${20 + i*30}%;
+                              top:${26 + (i%2 ? 14 : 0)}%;
+                              width:54px;height:54px;border-radius:50%;
+                              display:grid;place-items:center;
+                              background: radial-gradient(circle at 30% 30%, #fff 0%, #cfefff 28%, rgba(255,255,255,.12) 70%);
+                              border:1px solid rgba(255,255,255,.18);
+                              box-shadow: 0 0 20px rgba(76,231,255,.18), 0 10px 20px rgba(0,0,0,.20);
+                              transform: translate(-50%,-50%) ${g.spinning ? `translate(${Math.sin(Date.now()/600 + i)*14}px, ${Math.cos(Date.now()/700 + i)*10}px)` : ''};
+                              font-weight:900;font-size:18px;color:#0b0d17;
+                              animation:${g.spinning ? 'g88xShake .8s linear infinite' : 'none'};
+                            ">${n}</div>
+                          `).join('')}
+                        </div>
+                      </div>
+                      <div class="g88x-divider-line"></div>
+                      <div class="g88x-row">
+                        <button class="g88x-btn" data-spin>Thả bóng</button>
+                        <button class="g88x-btn g88x-btn-ghost" data-action="settle">Chốt 3 ô</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-panel g88x-panel-pad">
+                  <div class="g88x-stat-grid">
+                    <div class="g88x-stat"><b>Balls</b><span>${g.target.length}</span></div>
+                    <div class="g88x-stat"><b>Mode</b><span>${g.spinning ? 'Magnet' : 'Idle'}</span></div>
+                    <div class="g88x-stat"><b>Result</b><span>${g.result ? 'Ready' : '—'}</span></div>
+                  </div>
+                  <div class="g88x-divider-line"></div>
+                  <div class="g88x-panel g88x-panel-pad">
+                    <div class="g88x-modal-sub">Mô phỏng không trọng lực + lực hút từ tính ở tâm bàn để tạo cảm giác futuristic.</div>
+                    <div class="g88x-divider-line"></div>
+                    <div class="g88x-row">
+                      <span class="g88x-led cyan">Magnetic field</span>
+                      <span class="g88x-led gold">Orbit path</span>
+                      <span class="g88x-led green">3-number hit</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    action(id, act) {
+      if (id === 'baccarat') {
+        if (act === 'squeeze') {
+          Games.baccarat.squeeze = !Games.baccarat.squeeze;
+          if (G88X.ui?.toast) G88X.ui.toast(Games.baccarat.squeeze ? 'Bật squeeze vật lý' : 'Tắt squeeze vật lý', 'info', 1600);
+          U.modalHost().innerHTML = VIEW.modalBaccarat();
+          VIEW.mountModal();
+        }
+        if (act === 'deal') {
+          Games.baccarat.dealThird();
+          if (G88X.ui?.toast) G88X.ui.toast('Rút thêm lá thứ 3 nếu đủ điều kiện', 'info', 1600);
+          U.modalHost().innerHTML = VIEW.modalBaccarat();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          const r = Games.baccarat.settle();
+          if (G88X.fx) G88X.fx.flash(r.winner === 'Tie' ? 'rgba(76,231,255,.10)' : 'rgba(255,215,106,.16)', 240);
+          if (G88X.ui?.toast) G88X.ui.toast(`Baccarat: ${r.winner}`, r.winner === 'Tie' ? 'info' : 'success', 1800);
+          U.modalHost().innerHTML = VIEW.modalBaccarat();
+          VIEW.mountModal();
+        }
+      }
+
+      if (id === 'blackjack') {
+        if (act === 'hit') {
+          Games.blackjack.hit();
+          U.modalHost().innerHTML = VIEW.modalBlackjack();
+          VIEW.mountModal();
+        }
+        if (act === 'stand') {
+          Games.blackjack.stand = true;
+          U.modalHost().innerHTML = VIEW.modalBlackjack();
+          VIEW.mountModal();
+        }
+        if (act === 'allin') {
+          Games.blackjack.allIn = !Games.blackjack.allIn;
+          if (G88X.fx) G88X.fx.flash(Games.blackjack.allIn ? 'rgba(0,0,0,.44)' : 'rgba(255,255,255,.04)', 260);
+          U.modalHost().innerHTML = VIEW.modalBlackjack();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          const r = Games.blackjack.settle();
+          if (G88X.fx) G88X.fx.flash(r.winner === 'Dealer' ? 'rgba(255,94,120,.12)' : 'rgba(76,255,181,.12)', 260);
+          if (G88X.ui?.toast) G88X.ui.toast(`Blackjack: ${r.winner}`, r.winner === 'Dealer' ? 'error' : 'success', 1800);
+          U.modalHost().innerHTML = VIEW.modalBlackjack();
+          VIEW.mountModal();
+        }
+      }
+
+      if (id === 'craps' && act === 'roll') {
+        Games.craps.roll();
+        if (G88X.audio?.spin) G88X.audio.spin();
+        if (G88X.fx) G88X.fx.burst(innerWidth * .5, innerHeight * .52, '#4ce7ff', 24);
+        U.modalHost().innerHTML = VIEW.modalCraps();
+        VIEW.mountModal();
+      }
+      if (id === 'craps' && act === 'settle') {
+        const r = Games.craps.result || Games.craps.roll();
+        if (G88X.ui?.toast) G88X.ui.toast(r.state === 'pass' ? 'Pass Line!' : (r.state === 'craps' ? 'Craps!' : 'Field hit'), r.state === 'craps' ? 'error' : 'success', 1800);
+        U.modalHost().innerHTML = VIEW.modalCraps();
+        VIEW.mountModal();
+      }
+
+      if (id === 'sicbo' && act === 'roll') {
+        Games.sicbo.roll();
+        if (G88X.audio?.spin) G88X.audio.spin();
+        if (G88X.fx) G88X.fx.burst(innerWidth * .5, innerHeight * .5, '#ff5e78', 18);
+        U.modalHost().innerHTML = VIEW.modalSicbo();
+        VIEW.mountModal();
+      }
+      if (id === 'sicbo' && act === 'settle') {
+        const r = Games.sicbo.result || Games.sicbo.roll();
+        if (G88X.ui?.toast) G88X.ui.toast(r.tai ? 'Tài' : 'Xỉu', r.tai ? 'success' : 'info', 1700);
+        U.modalHost().innerHTML = VIEW.modalSicbo();
+        VIEW.mountModal();
+      }
+
+      if (id === 'wheel' && act === 'spin') {
+        Games.wheel.spin();
+        if (G88X.audio?.sweepUp) G88X.audio.sweepUp();
+        if (G88X.fx) G88X.fx.flash('rgba(76,231,255,.12)', 240);
+        U.modalHost().innerHTML = VIEW.modalWheel();
+        VIEW.mountModal();
+        setTimeout(() => {
+          U.modalHost().innerHTML = VIEW.modalWheel();
+          VIEW.mountModal();
+          if (G88X.ui?.toast) G88X.ui.toast(`Cyber Wheel: x${Games.wheel.result}`, 'success', 1800);
+        }, 2200);
+      }
+      if (id === 'wheel' && act === 'settle') {
+        if (G88X.ui?.toast) G88X.ui.toast(`Chốt vòng quay: x${Games.wheel.result ?? '-'}`, 'info', 1600);
+      }
+
+      if (id === 'vault' && act === 'spin') {
+        Games.vault.spin();
+        if (G88X.audio?.spin) G88X.audio.spin();
+        if (G88X.fx) G88X.fx.flash(Games.vault.opened ? 'rgba(255,215,106,.18)' : 'rgba(76,231,255,.10)', 260);
+        U.modalHost().innerHTML = VIEW.modalVault();
+        VIEW.mountModal();
+        if (Games.vault.opened && G88X.fx) G88X.fx.burst(innerWidth * .5, innerHeight * .45, '#ffd76a', 42);
+        if (G88X.ui?.toast) G88X.ui.toast(Games.vault.opened ? 'Két mở tung!' : 'Sai mã két', Games.vault.opened ? 'success' : 'error', 1800);
+      }
+      if (id === 'vault' && act === 'settle') {
+        if (G88X.ui?.toast) G88X.ui.toast(Games.vault.opened ? 'Mã đã khớp' : 'Cửa vẫn khóa', Games.vault.opened ? 'success' : 'info', 1600);
+      }
+
+      if (id === 'gravity' && act === 'spin') {
+        Games.gravity.spin();
+        if (G88X.audio?.sweepUp) G88X.audio.sweepUp();
+        if (G88X.fx) G88X.fx.burst(innerWidth * .5, innerHeight * .45, '#c58cff', 32);
+        U.modalHost().innerHTML = VIEW.modalGravity();
+        VIEW.mountModal();
+        setTimeout(() => {
+          U.modalHost().innerHTML = VIEW.modalGravity();
+          VIEW.mountModal();
+          if (G88X.ui?.toast) G88X.ui.toast(`Gravity Roulette: ${Games.gravity.target.join(', ')}`, 'success', 1800);
+        }, 900);
+      }
+      if (id === 'gravity' && act === 'settle') {
+        if (G88X.ui?.toast) G88X.ui.toast('3 bóng đã được chốt', 'info', 1400);
+      }
+    }
+  };
+
+  U.createDie = function(value, extraStyle = '') {
+    const map = {
+      1: [[50,50]],
+      2: [[25,25],[75,75]],
+      3: [[25,25],[50,50],[75,75]],
+      4: [[25,25],[75,25],[25,75],[75,75]],
+      5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+      6: [[25,20],[75,20],[25,50],[75,50],[25,80],[75,80]]
+    };
+    const pts = map[value] || map[1];
+    return `
+      <div class="g88x-dice" style="${extraStyle}">
+        ${pts.map(([x,y]) => `<span class="g88x-pip" style="left:${x}%;top:${y}%;transform:translate(-50%,-50%)"></span>`).join('')}
+      </div>
+    `;
+  };
+
+  U.boot = () => {
+    U.style();
+    U.ensureHost();
+    VIEW.renderShell();
+    if (G88X.ui?.toast) G88X.ui.toast('Part 3 loaded', 'info', 1200);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', U.boot, { once: true });
+  } else {
+    U.boot();
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') VIEW.close();
+  }, { passive: true });
+})();
+</script>
+<script>
+(() => {
+  'use strict';
+
+  const G88X = window.G88X = window.G88X || {};
+  if (G88X.part4Booted) return;
+  G88X.part4Booted = true;
+
+  const S = {
+    uiId: 'g88x-expansion-part4',
+    cardsId: 'g88x-expansion-part4-cards',
+    modalId: 'g88x-expansion-part4-modal',
+    styleId: 'g88x-part4-style',
+    active: null
+  };
+
+  const U = {
+    root() {
+      return document.getElementById('app') || document.body;
+    },
+    host() {
+      let el = document.getElementById(S.uiId);
+      if (!el) {
+        el = document.createElement('section');
+        el.id = S.uiId;
+        el.style.position = 'relative';
+        el.style.zIndex = '3';
+        el.style.margin = '18px auto 0';
+        el.style.width = 'min(1600px, calc(100vw - 24px))';
+        el.style.padding = '0 12px 28px';
+        el.innerHTML = `<div id="${S.cardsId}"></div><div id="${S.modalId}"></div>`;
+        U.root().appendChild(el);
+      }
+      return el;
+    },
+    cardsHost() {
+      U.host();
+      return document.getElementById(S.cardsId);
+    },
+    modalHost() {
+      U.host();
+      return document.getElementById(S.modalId);
+    },
+    style() {
+      if (document.getElementById(S.styleId)) return;
+      const style = document.createElement('style');
+      style.id = S.styleId;
+      style.textContent = `
+        #${S.uiId}, #${S.uiId} * { box-sizing: border-box; }
+        #${S.uiId} .g88x-part4-wrap{
+          padding:18px;
+          border-radius:32px;
+          background:
+            radial-gradient(circle at 10% 0%, rgba(76,231,255,.10), transparent 16%),
+            radial-gradient(circle at 90% 0%, rgba(255,94,120,.08), transparent 16%),
+            linear-gradient(180deg, rgba(7,9,18,.94), rgba(4,5,12,.98));
+          border:1px solid rgba(255,255,255,.08);
+          box-shadow: 0 30px 90px rgba(0,0,0,.35);
+          overflow:hidden;
+        }
+        #${S.uiId} .g88x-part4-head{
+          display:flex;
+          align-items:flex-end;
+          justify-content:space-between;
+          gap:16px;
+          padding:6px 4px 18px;
+        }
+        #${S.uiId} .g88x-part4-title{
+          font-size: clamp(20px, 2.8vw, 32px);
+          font-weight: 900;
+          letter-spacing:.08em;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #fff 0%, #4ce7ff 35%, #fff 55%, #c58cff 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        }
+        #${S.uiId} .g88x-part4-sub{
+          color: rgba(255,255,255,.62);
+          font-size: 12px;
+          margin-top: 4px;
+        }
+        #${S.uiId} .g88x-part4-grid{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap:16px;
+        }
+        @media (max-width: 1280px){
+          #${S.uiId} .g88x-part4-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 780px){
+          #${S.uiId} .g88x-part4-grid{ grid-template-columns: 1fr; }
+        }
+        #${S.uiId} .g88x-part4-card{
+          position:relative;
+          min-height: 178px;
+          padding:18px;
+          border-radius:26px;
+          cursor:pointer;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 10% 0%, rgba(255,255,255,.08), transparent 16%),
+            linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+          box-shadow: 0 16px 36px rgba(0,0,0,.24);
+          transition: transform .22s ease, box-shadow .22s ease, filter .22s ease;
+        }
+        #${S.uiId} .g88x-part4-card:hover{
+          transform: translateY(-3px) perspective(900px) rotateX(2deg);
+          box-shadow: 0 24px 58px rgba(0,0,0,.34);
+          filter: saturate(1.05);
+        }
+        #${S.uiId} .g88x-part4-card::before{
+          content:'';
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background:
+            radial-gradient(circle at 18% 12%, rgba(255,215,106,.18), transparent 22%),
+            radial-gradient(circle at 92% 0%, rgba(76,231,255,.14), transparent 18%),
+            radial-gradient(circle at 50% 100%, rgba(197,140,255,.12), transparent 24%);
+          opacity:.9;
+        }
+        #${S.uiId} .g88x-part4-top{
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:10px;
+          position:relative;
+          z-index:1;
+        }
+        #${S.uiId} .g88x-part4-emoji{
+          width:54px;height:54px;
+          border-radius:18px;
+          display:grid;
+          place-items:center;
+          font-size:26px;
+          background: linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 12px 20px rgba(0,0,0,.18);
+        }
+        #${S.uiId} .g88x-part4-title-sm{
+          margin:0;
+          font-size:16px;
+          font-weight:900;
+          text-transform:uppercase;
+          letter-spacing:.05em;
+          color:#fff;
+        }
+        #${S.uiId} .g88x-part4-desc{
+          color: rgba(255,255,255,.62);
+          font-size:12px;
+          margin-top:8px;
+          line-height:1.45;
+        }
+        #${S.uiId} .g88x-part4-tag{
+          display:inline-flex;
+          align-items:center;
+          gap:6px;
+          margin-top:12px;
+          padding:7px 10px;
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(0,0,0,.18);
+          color: rgba(255,255,255,.92);
+          font-size:11px;
+          font-weight:800;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+        }
+        #${S.uiId} .g88x-part4-modal{
+          position:fixed;
+          inset:0;
+          z-index:240;
+          background: rgba(0,0,0,.72);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding:20px;
+        }
+        #${S.uiId} .g88x-part4-cardmodal{
+          width:min(1100px, 96vw);
+          border-radius:32px;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 18% 0%, rgba(255,215,106,.10), transparent 18%),
+            radial-gradient(circle at 100% 20%, rgba(76,231,255,.08), transparent 18%),
+            linear-gradient(180deg, rgba(11,12,24,.98), rgba(5,6,14,.98));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: 0 34px 120px rgba(0,0,0,.58);
+        }
+        #${S.uiId} .g88x-part4-headmodal{
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:16px;
+          padding:22px 22px 0;
+        }
+        #${S.uiId} .g88x-part4-titlemodal{
+          font-size: clamp(22px, 2.6vw, 30px);
+          font-weight: 900;
+          letter-spacing:.08em;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #fff 0%, #ffd76a 45%, #fff3c2 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        }
+        #${S.uiId} .g88x-part4-submodal{
+          color: rgba(255,255,255,.64);
+          font-size:12px;
+          line-height:1.5;
+          margin-top:6px;
+        }
+        #${S.uiId} .g88x-part4-close{
+          width:42px;height:42px;
+          border-radius:14px;
+          cursor:pointer;
+          display:grid;
+          place-items:center;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(255,255,255,.05);
+          color:#fff;
+          font-size:20px;
+          line-height:1;
+        }
+        #${S.uiId} .g88x-part4-body{
+          padding:18px 22px 22px;
+        }
+        #${S.uiId} .g88x-part4-gridmodal{
+          display:grid;
+          grid-template-columns: 1.05fr .95fr;
+          gap:18px;
+        }
+        @media (max-width: 980px){
+          #${S.uiId} .g88x-part4-gridmodal{ grid-template-columns:1fr; }
+        }
+        #${S.uiId} .g88x-part4-panel{
+          position:relative;
+          border-radius:24px;
+          background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+          overflow:hidden;
+        }
+        #${S.uiId} .g88x-part4-pad{ padding:18px; }
+        #${S.uiId} .g88x-part4-panel::before{
+          content:'';
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background:
+            radial-gradient(circle at 15% 0%, rgba(255,215,106,.12), transparent 20%),
+            radial-gradient(circle at 85% 0%, rgba(76,231,255,.10), transparent 18%);
+        }
+        #${S.uiId} .g88x-part4-row{
+          display:flex;
+          gap:12px;
+          flex-wrap:wrap;
+          align-items:center;
+        }
+        #${S.uiId} .g88x-part4-btn{
+          position:relative;
+          border:none;
+          outline:none;
+          border-radius:16px;
+          padding:11px 16px;
+          font-weight:900;
+          letter-spacing:.06em;
+          text-transform:uppercase;
+          color:#0a0c13;
+          background: linear-gradient(135deg, #fff 0%, #ffd76a 45%, #b8891d 100%);
+          box-shadow: 0 14px 32px rgba(255,215,106,.14), inset 0 1px 0 rgba(255,255,255,.68);
+          cursor:pointer;
+          transition: transform .18s ease, filter .18s ease;
+        }
+        #${S.uiId} .g88x-part4-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+        #${S.uiId} .g88x-part4-btn:active{ transform: translateY(1px); }
+        #${S.uiId} .g88x-part4-btn-ghost{
+          color:#fff;
+          background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: 0 10px 26px rgba(0,0,0,.20);
+        }
+        #${S.uiId} .g88x-part4-input,
+        #${S.uiId} .g88x-part4-select{
+          width:100%;
+          border-radius:16px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(255,255,255,.04);
+          color:#fff;
+          outline:none;
+          padding:12px 14px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+        }
+        #${S.uiId} .g88x-part4-input::placeholder{ color: rgba(255,255,255,.34); }
+        #${S.uiId} .g88x-part4-input:focus,
+        #${S.uiId} .g88x-part4-select:focus{
+          border-color: rgba(255,215,106,.55);
+          box-shadow: 0 0 0 3px rgba(255,215,106,.10), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        #${S.uiId} .g88x-part4-divider{
+          height:1px;
+          margin:14px 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+        }
+        #${S.uiId} .g88x-part4-stage{
+          position:relative;
+          min-height: 390px;
+          border-radius:24px;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 50% 20%, rgba(255,215,106,.08), transparent 24%),
+            radial-gradient(circle at 20% 80%, rgba(76,231,255,.08), transparent 20%),
+            linear-gradient(180deg, rgba(8,10,18,.96), rgba(4,5,11,.98));
+          border:1px solid rgba(255,255,255,.08);
+        }
+        #${S.uiId} .g88x-part4-stage::after{
+          content:'';
+          position:absolute;
+          inset:0;
+          background: linear-gradient(120deg, transparent 0 45%, rgba(255,255,255,.05) 50%, transparent 55%);
+          opacity:.42;
+          pointer-events:none;
+        }
+        #${S.uiId} .g88x-part4-chip{
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+          padding:7px 10px;
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(0,0,0,.18);
+          color:#fff;
+          font-size:11px;
+          font-weight:900;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+        }
+        #${S.uiId} .g88x-part4-statgrid{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap:12px;
+        }
+        @media (max-width: 640px){
+          #${S.uiId} .g88x-part4-statgrid{ grid-template-columns:1fr; }
+        }
+        #${S.uiId} .g88x-part4-stat{
+          padding:14px 16px;
+          border-radius:18px;
+          background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+        }
+        #${S.uiId} .g88x-part4-stat b{
+          display:block;
+          color:rgba(255,255,255,.58);
+          font-size:11px;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          margin-bottom:6px;
+        }
+        #${S.uiId} .g88x-part4-stat span{
+          font-size:18px;
+          font-weight:900;
+          color:#fff;
+        }
+        #${S.uiId} .g88x-part4-led{
+          border-radius:999px;
+          padding:6px 10px;
+          font-size:11px;
+          font-weight:900;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          border:1px solid rgba(255,255,255,.12);
+          background: rgba(255,255,255,.04);
+        }
+        #${S.uiId} .g88x-part4-led.red{ color:#ff5e78; }
+        #${S.uiId} .g88x-part4-led.cyan{ color:#4ce7ff; }
+        #${S.uiId} .g88x-part4-led.gold{ color:#ffd76a; }
+        #${S.uiId} .g88x-part4-led.green{ color:#4cffb5; }
+        #${S.uiId} .g88x-part4-led.violet{ color:#c58cff; }
+        #${S.uiId} .g88x-part4-scanline{
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background: linear-gradient(180deg, transparent 0 48%, rgba(255,255,255,.08) 50%, transparent 52%);
+          opacity:.2;
+          animation:g88xPart4Scan 5.5s linear infinite;
+        }
+        @keyframes g88xPart4Scan{
+          0%{ transform: translateY(-14%); }
+          100%{ transform: translateY(114%); }
+        }
+        @keyframes g88xPart4Spin{
+          to{ transform: rotate(360deg); }
+        }
+        @keyframes g88xPart4Pop{
+          0%{ transform: scale(.86); opacity:0; }
+          80%{ transform: scale(1.02); opacity:1; }
+          100%{ transform: scale(1); opacity:1; }
+        }
+        @keyframes g88xPart4Shake{
+          0%,100%{ transform: translate(0,0); }
+          25%{ transform: translate(-2px,2px); }
+          50%{ transform: translate(2px,-2px); }
+          75%{ transform: translate(-1px,1px); }
+        }
+      `;
+      document.head.appendChild(style);
+    },
+    money(n) {
+      return Number(n || 0).toLocaleString('vi-VN');
+    },
+    toast(msg, type = 'info') {
+      if (G88X.ui?.toast) return G88X.ui.toast(msg, type, 1800);
+      console.log(type, msg);
+    }
+  };
+
+  const Games = {
+    md5: {
+      seed: '',
+      hash: '',
+      dice: [1,1,1],
+      result: null,
+      roll() {
+        this.seed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        this.hash = btoa(this.seed).replace(/=/g, '').slice(0, 32).toUpperCase();
+        this.dice = [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)];
+        const sum = this.dice.reduce((a,b)=>a+b, 0);
+        const tai = sum >= 11;
+        this.result = { sum, tai, hash: this.hash };
+        return this.result;
+      }
+    },
+    xocdia: {
+      tokens: [1,1,1,1],
+      bowlOpen: false,
+      result: null,
+      roll() {
+        this.tokens = [0,0,0,0].map(() => Math.floor(Math.random() * 2));
+        const redCount = this.tokens.filter(x => x === 1).length;
+        this.result = { redCount, fourSame: redCount === 0 || redCount === 4 };
+        return this.result;
+      }
+    },
+    baucua: {
+      slots: ['Bau', 'Cua', 'Tom'],
+      result: null,
+      roll() {
+        const list = ['Bau','Cua','Tom','Ca','Ga','Nai'];
+        this.slots = [list[Math.floor(Math.random()*6)], list[Math.floor(Math.random()*6)], list[Math.floor(Math.random()*6)]];
+        this.result = { slots: this.slots.slice() };
+        return this.result;
+      }
+    }
+  };
+
+  const VIEW = {
+    renderShell() {
+      U.cardsHost().innerHTML = `
+        <div class="g88x-part4-wrap">
+          <div class="g88x-part4-head">
+            <div>
+              <div class="g88x-part4-title">Quantum & Myth Expansion</div>
+              <div class="g88x-part4-sub">Tài Xỉu MD5 Quantum · Xóc Đĩa Tứ Linh Premium · Bầu Cua Hoàng Kim</div>
+            </div>
+            <div class="g88x-part4-chip">VIP MODULE</div>
+          </div>
+
+          <div class="g88x-part4-grid">
+            ${VIEW.card('md5', '🛡️', 'Tài Xỉu MD5 Quantum', 'Chuỗi hash minh bạch, giao diện cyberpunk, chuỗi mã chạy như matrix.', 'cyan')}
+            ${VIEW.card('xocdia', '📀', 'Xóc Đĩa Tứ Linh Premium', 'Long – Lân – Quy – Phụng khắc ngọc bích, bát vàng ròng, tứ tử bay quanh màn hình.', 'violet')}
+            ${VIEW.card('baucua', '🦀', 'Bầu Cua Hoàng Kim', 'Linh vật đúc vàng nguyên khối, mở bát phóng to 360° lấp lánh.', 'gold')}
+          </div>
+        </div>
+      `;
+
+      U.cardsHost().querySelectorAll('[data-game]').forEach(el => {
+        el.addEventListener('click', () => VIEW.open(el.getAttribute('data-game')));
+      });
+    },
+    card(id, emoji, title, desc, accent) {
+      return `
+        <article class="g88x-part4-card" data-game="${id}">
+          <div class="g88x-part4-top">
+            <div class="g88x-part4-emoji">${emoji}</div>
+            <div class="g88x-part4-led ${accent}">${accent.toUpperCase()}</div>
+          </div>
+          <div style="position:relative; z-index:1; margin-top:14px;">
+            <h3 class="g88x-part4-title-sm">${title}</h3>
+            <p class="g88x-part4-desc">${desc}</p>
+            <div class="g88x-part4-tag">Mở giao diện</div>
+          </div>
+        </article>
+      `;
+    },
+    open(id) {
+      S.active = id;
+      VIEW.mountModal();
+      if (G88X.audio?.click) G88X.audio.click();
+      if (G88X.fx?.flash) G88X.fx.flash('rgba(255,215,106,.08)', 180);
+    },
+    close() {
+      S.active = null;
+      U.modalHost().innerHTML = '';
+    },
+    mountModal() {
+      const id = S.active;
+      if (!id) return VIEW.close();
+
+      if (id === 'md5' && !Games.md5.result) Games.md5.roll();
+      if (id === 'xocdia' && !Games.xocdia.result) Games.xocdia.roll();
+      if (id === 'baucua' && !Games.baucua.result) Games.baucua.roll();
+
+      const htmlMap = {
+        md5: VIEW.modalMD5(),
+        xocdia: VIEW.modalXocDia(),
+        baucua: VIEW.modalBauCua()
+      };
+
+      U.modalHost().innerHTML = htmlMap[id] || '';
+      const host = U.modalHost();
+
+      host.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', VIEW.close));
+      host.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => VIEW.action(id, btn.getAttribute('data-action')));
+      });
+      host.querySelector('[data-roll]')?.addEventListener('click', () => VIEW.action(id, 'roll'));
+      host.querySelector('[data-open]')?.addEventListener('click', () => VIEW.action(id, 'open'));
+    },
+    modalMD5() {
+      const g = Games.md5;
+      return `
+        <div class="g88x-part4-modal" data-close>
+          <div class="g88x-part4-cardmodal" onclick="event.stopPropagation()">
+            <div class="g88x-part4-headmodal">
+              <div>
+                <div class="g88x-part4-chip">Cyber MD5</div>
+                <div class="g88x-part4-titlemodal">Tài Xỉu MD5 Quantum</div>
+                <div class="g88x-part4-submodal">Chuỗi hash chạy lướt, laser đỏ chốt kết quả, giao diện Matrix cyberpunk.</div>
+              </div>
+              <button class="g88x-part4-close" data-close>×</button>
+            </div>
+            <div class="g88x-part4-body">
+              <div class="g88x-part4-gridmodal">
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-stage">
+                    <div class="g88x-part4-scanline"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-part4-row">
+                        <span class="g88x-part4-chip">Hash ${g.hash}</span>
+                        <span class="g88x-part4-chip">Sum ${g.result?.sum ?? 0}</span>
+                        <span class="g88x-part4-chip">${g.result?.tai ? 'TÀI' : 'XỈU'}</span>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:grid; gap:10px; font-family:monospace; color:#8df9ff; opacity:.88; line-height:1.5;">
+                        <div>0110 1011 1110 0011 0101 1001 0001 1110</div>
+                        <div>0011 1101 1001 0110 1010 0011 1111 0001</div>
+                        <div>MD5::QUANTUM::PROTOCOL::VERIFIED</div>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:flex; align-items:center; justify-content:center; gap:16px; min-height:180px;">
+                        ${U.die(g.dice[0])}
+                        ${U.die(g.dice[1])}
+                        ${U.die(g.dice[2])}
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div class="g88x-part4-row">
+                        <button class="g88x-part4-btn" data-roll>Lắc lại</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-action="settle">Chốt kết quả</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-statgrid">
+                    <div class="g88x-part4-stat"><b>Dice</b><span>${g.dice.join(' · ')}</span></div>
+                    <div class="g88x-part4-stat"><b>Mode</b><span>${g.result?.tai ? 'Tài' : 'Xỉu'}</span></div>
+                    <div class="g88x-part4-stat"><b>State</b><span>Quantum</span></div>
+                  </div>
+                  <div class="g88x-part4-divider"></div>
+                  <div class="g88x-part4-panel g88x-part4-pad">
+                    <div class="g88x-part4-submodal">Hiệu ứng chủ đạo: màn hình viễn tưởng, hash code lướt nền, laser đỏ chốt kết quả từng mili-giây.</div>
+                    <div class="g88x-part4-divider"></div>
+                    <div class="g88x-part4-row">
+                      <span class="g88x-part4-led cyan">Matrix scan</span>
+                      <span class="g88x-part4-led gold">Laser lock</span>
+                      <span class="g88x-part4-led green">Transparent fair</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalXocDia() {
+      const g = Games.xocdia;
+      const redCount = g.tokens.filter(x => x === 1).length;
+      return `
+        <div class="g88x-part4-modal" data-close>
+          <div class="g88x-part4-cardmodal" onclick="event.stopPropagation()">
+            <div class="g88x-part4-headmodal">
+              <div>
+                <div class="g88x-part4-chip">Mythic Bowl</div>
+                <div class="g88x-part4-titlemodal">Xóc Đĩa Tứ Linh Premium</div>
+                <div class="g88x-part4-submodal">Long – Lân – Quy – Phụng khắc ngọc bích, bát vàng ròng, tứ tử bay quanh màn hình.</div>
+              </div>
+              <button class="g88x-part4-close" data-close>×</button>
+            </div>
+            <div class="g88x-part4-body">
+              <div class="g88x-part4-gridmodal">
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-stage">
+                    <div class="g88x-part4-scanline"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-part4-row">
+                        <span class="g88x-part4-chip">Red ${redCount}</span>
+                        <span class="g88x-part4-chip">Open ${g.bowlOpen ? 'YES' : 'NO'}</span>
+                        <span class="g88x-part4-chip">${g.result?.fourSame ? 'TỨ TỬ' : 'NORMAL'}</span>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:grid; place-items:center; min-height:200px;">
+                        <div style="
+                          width:220px;height:220px;border-radius:50%;
+                          background:
+                            radial-gradient(circle at 35% 30%, rgba(255,215,106,.24), transparent 28%),
+                            radial-gradient(circle at 50% 50%, rgba(255,255,255,.10), rgba(255,255,255,.03) 52%, rgba(0,0,0,.28) 75%);
+                          border:10px solid rgba(255,215,106,.52);
+                          box-shadow: 0 0 0 1px rgba(255,255,255,.08), inset 0 0 30px rgba(0,0,0,.22), 0 20px 50px rgba(0,0,0,.34);
+                          position:relative;
+                        ">
+                          <div style="position:absolute; inset:18px; border-radius:50%; display:grid; place-items:center;">
+                            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:center;">
+                              ${g.tokens.map((t,i)=>`
+                                <div style="
+                                  width:44px;height:44px;border-radius:14px;
+                                  display:grid;place-items:center;
+                                  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+                                  border:1px solid rgba(255,255,255,.10);
+                                  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 18px rgba(0,0,0,.22);
+                                  font-weight:900;color:#fff;
+                                  transform: rotate(${i*10-15}deg);
+                                ">${t ? 'ĐỎ' : 'TRẮNG'}</div>
+                              `).join('')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div class="g88x-part4-row">
+                        <button class="g88x-part4-btn" data-roll>Khui bát</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-open>Mở bát</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-action="settle">Chốt cửa</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-statgrid">
+                    <div class="g88x-part4-stat"><b>Token</b><span>${g.tokens.join(' · ')}</span></div>
+                    <div class="g88x-part4-stat"><b>Red</b><span>${redCount}</span></div>
+                    <div class="g88x-part4-stat"><b>Type</b><span>${g.result?.fourSame ? 'Tứ tử' : 'Bình thường'}</span></div>
+                  </div>
+                  <div class="g88x-part4-divider"></div>
+                  <div class="g88x-part4-panel g88x-part4-pad">
+                    <div class="g88x-part4-submodal">Khi ra tứ tử, linh vật tương ứng có thể được mô phỏng bay quanh màn hình ở part sau.</div>
+                    <div class="g88x-part4-divider"></div>
+                    <div class="g88x-part4-row">
+                      <span class="g88x-part4-led violet">Mythic bowl</span>
+                      <span class="g88x-part4-led gold">Gold bowl</span>
+                      <span class="g88x-part4-led red">Red/White</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalBauCua() {
+      const g = Games.baucua;
+      return `
+        <div class="g88x-part4-modal" data-close>
+          <div class="g88x-part4-cardmodal" onclick="event.stopPropagation()">
+            <div class="g88x-part4-headmodal">
+              <div>
+                <div class="g88x-part4-chip">Golden Animals</div>
+                <div class="g88x-part4-titlemodal">Bầu Cua Hoàng Kim</div>
+                <div class="g88x-part4-submodal">Linh vật đúc vàng nguyên khối, mở bát phóng to 360° lấp lánh phản quang.</div>
+              </div>
+              <button class="g88x-part4-close" data-close>×</button>
+            </div>
+            <div class="g88x-part4-body">
+              <div class="g88x-part4-gridmodal">
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-stage">
+                    <div class="g88x-part4-scanline"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-part4-row">
+                        <span class="g88x-part4-chip">Slots ${g.slots.join(' · ')}</span>
+                        <span class="g88x-part4-chip">Gold mode</span>
+                        <span class="g88x-part4-chip">Reveal</span>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px; min-height:200px;">
+                        ${g.slots.map((s,i)=>`
+                          <div style="
+                            border-radius:20px;
+                            background:
+                              radial-gradient(circle at 30% 20%, rgba(255,215,106,.24), transparent 24%),
+                              linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+                            border:1px solid rgba(255,255,255,.10);
+                            box-shadow: 0 16px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
+                            display:grid; place-items:center;
+                            min-height:160px;
+                            transform: perspective(900px) rotateY(${i*6-6}deg) rotateX(2deg);
+                          ">
+                            <div style="text-align:center;">
+                              <div style="font-size:44px; font-weight:900; color:#fff;">${VIEW.iconFor(g.slots[i])}</div>
+                              <div style="margin-top:8px; font-size:12px; font-weight:900; letter-spacing:.08em; color:#ffd76a; text-transform:uppercase;">${s}</div>
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div class="g88x-part4-row">
+                        <button class="g88x-part4-btn" data-roll>Xóc lại</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-open>Mở bát</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-action="settle">Chốt kết quả</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-statgrid">
+                    <div class="g88x-part4-stat"><b>Top</b><span>${g.slots[0]}</span></div>
+                    <div class="g88x-part4-stat"><b>Mid</b><span>${g.slots[1]}</span></div>
+                    <div class="g88x-part4-stat"><b>Bot</b><span>${g.slots[2]}</span></div>
+                  </div>
+                  <div class="g88x-part4-divider"></div>
+                  <div class="g88x-part4-panel g88x-part4-pad">
+                    <div class="g88x-part4-submodal">Khi trúng, linh vật đó sẽ được phóng to giữa màn hình và xoay 360° lấp lánh.</div>
+                    <div class="g88x-part4-divider"></div>
+                    <div class="g88x-part4-row">
+                      <span class="g88x-part4-led gold">Golden animal</span>
+                      <span class="g88x-part4-led cyan">Reflective</span>
+                      <span class="g88x-part4-led green">Royal reveal</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    action(id, act) {
+      if (id === 'md5') {
+        if (act === 'roll') {
+          Games.md5.roll();
+          if (G88X.audio?.spin) G88X.audio.spin();
+          if (G88X.fx?.flash) G88X.fx.flash('rgba(76,231,255,.10)', 220);
+          U.modalHost().innerHTML = VIEW.modalMD5();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          const r = Games.md5.result || Games.md5.roll();
+          if (G88X.ui?.toast) G88X.ui.toast(`MD5 Quantum: ${r.tai ? 'TÀI' : 'XỈU'} · ${r.sum}`, r.tai ? 'success' : 'info', 1800);
+          U.modalHost().innerHTML = VIEW.modalMD5();
+          VIEW.mountModal();
+        }
+      }
+
+      if (id === 'xocdia') {
+        if (act === 'roll' || act === 'open') {
+          Games.xocdia.roll();
+          Games.xocdia.bowlOpen = true;
+          if (G88X.audio?.spin) G88X.audio.spin();
+          if (G88X.fx?.burst) G88X.fx.burst(innerWidth * .5, innerHeight * .48, '#ffd76a', 24);
+          U.modalHost().innerHTML = VIEW.modalXocDia();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          const r = Games.xocdia.result || Games.xocdia.roll();
+          if (G88X.ui?.toast) G88X.ui.toast(r.fourSame ? 'Tứ tử!' : `Đỏ: ${r.redCount}/4`, r.fourSame ? 'success' : 'info', 1800);
+          U.modalHost().innerHTML = VIEW.modalXocDia();
+          VIEW.mountModal();
+        }
+      }
+
+      if (id === 'baucua') {
+        if (act === 'roll' || act === 'open') {
+          Games.baucua.roll();
+          if (G88X.audio?.spin) G88X.audio.spin();
+          if (G88X.fx?.flash) G88X.fx.flash('rgba(255,215,106,.10)', 220);
+          U.modalHost().innerHTML = VIEW.modalBauCua();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          if (G88X.ui?.toast) G88X.ui.toast(`Bầu Cua: ${Games.baucua.slots.join(' · ')}`, 'success', 1800);
+          U.modalHost().innerHTML = VIEW.modalBauCua();
+          VIEW.mountModal();
+        }
+      }
+    }
+  };
+
+  U.die = function(value) {
+    const map = {
+      1: [[50,50]],
+      2: [[25,25],[75,75]],
+      3: [[25,25],[50,50],[75,75]],
+      4: [[25,25],[75,25],[25,75],[75,75]],
+      5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+      6: [[25,20],[75,20],[25,50],[75,50],[25,80],[75,80]]
+    };
+    return `
+      <div class="g88x-dice" style="width:58px;height:58px;border-radius:16px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(240,240,255,.92)); border:1px solid rgba(0,0,0,.12); box-shadow: 0 14px 26px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.76); position:relative;">
+        ${(map[value] || map[1]).map(([x,y]) => `<span class="g88x-pip" style="position:absolute; width:9px; height:9px; border-radius:50%; background:#121212; left:${x}%; top:${y}%; transform:translate(-50%,-50%);"></span>`).join('')}
+      </div>
+    `;
+  };
+
+  VIEW.iconFor = function(name) {
+    const table = {
+      Bau: '🪷',
+      Cua: '🦀',
+      Tom: '🦐',
+      Ca: '🐟',
+      Ga: '🐓',
+      Nai: '🦌'
+    };
+    return table[name] || '✨';
+  };
+
+  U.boot = () => {
+    U.style();
+    U.host();
+    VIEW.renderShell();
+    if (G88X.ui?.toast) G88X.ui.toast('Part 4 loaded', 'info', 1200);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', U.boot, { once: true });
+  } else {
+    U.boot();
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') VIEW.close();
+  }, { passive: true });
+})();
+</script>
+<script>
+(() => {
+  'use strict';
+
+  const G88X = window.G88X = window.G88X || {};
+  if (G88X.part4Booted) return;
+  G88X.part4Booted = true;
+
+  const S = {
+    uiId: 'g88x-expansion-part4',
+    cardsId: 'g88x-expansion-part4-cards',
+    modalId: 'g88x-expansion-part4-modal',
+    styleId: 'g88x-part4-style',
+    active: null
+  };
+
+  const U = {
+    root() {
+      return document.getElementById('app') || document.body;
+    },
+    host() {
+      let el = document.getElementById(S.uiId);
+      if (!el) {
+        el = document.createElement('section');
+        el.id = S.uiId;
+        el.style.position = 'relative';
+        el.style.zIndex = '3';
+        el.style.margin = '18px auto 0';
+        el.style.width = 'min(1600px, calc(100vw - 24px))';
+        el.style.padding = '0 12px 28px';
+        el.innerHTML = `<div id="${S.cardsId}"></div><div id="${S.modalId}"></div>`;
+        U.root().appendChild(el);
+      }
+      return el;
+    },
+    cardsHost() {
+      U.host();
+      return document.getElementById(S.cardsId);
+    },
+    modalHost() {
+      U.host();
+      return document.getElementById(S.modalId);
+    },
+    style() {
+      if (document.getElementById(S.styleId)) return;
+      const style = document.createElement('style');
+      style.id = S.styleId;
+      style.textContent = `
+        #${S.uiId}, #${S.uiId} * { box-sizing: border-box; }
+        #${S.uiId} .g88x-part4-wrap{
+          padding:18px;
+          border-radius:32px;
+          background:
+            radial-gradient(circle at 10% 0%, rgba(76,231,255,.10), transparent 16%),
+            radial-gradient(circle at 90% 0%, rgba(255,94,120,.08), transparent 16%),
+            linear-gradient(180deg, rgba(7,9,18,.94), rgba(4,5,12,.98));
+          border:1px solid rgba(255,255,255,.08);
+          box-shadow: 0 30px 90px rgba(0,0,0,.35);
+          overflow:hidden;
+        }
+        #${S.uiId} .g88x-part4-head{
+          display:flex;
+          align-items:flex-end;
+          justify-content:space-between;
+          gap:16px;
+          padding:6px 4px 18px;
+        }
+        #${S.uiId} .g88x-part4-title{
+          font-size: clamp(20px, 2.8vw, 32px);
+          font-weight: 900;
+          letter-spacing:.08em;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #fff 0%, #4ce7ff 35%, #fff 55%, #c58cff 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        }
+        #${S.uiId} .g88x-part4-sub{
+          color: rgba(255,255,255,.62);
+          font-size: 12px;
+          margin-top: 4px;
+        }
+        #${S.uiId} .g88x-part4-grid{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap:16px;
+        }
+        @media (max-width: 1280px){
+          #${S.uiId} .g88x-part4-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 780px){
+          #${S.uiId} .g88x-part4-grid{ grid-template-columns: 1fr; }
+        }
+        #${S.uiId} .g88x-part4-card{
+          position:relative;
+          min-height: 178px;
+          padding:18px;
+          border-radius:26px;
+          cursor:pointer;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 10% 0%, rgba(255,255,255,.08), transparent 16%),
+            linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+          box-shadow: 0 16px 36px rgba(0,0,0,.24);
+          transition: transform .22s ease, box-shadow .22s ease, filter .22s ease;
+        }
+        #${S.uiId} .g88x-part4-card:hover{
+          transform: translateY(-3px) perspective(900px) rotateX(2deg);
+          box-shadow: 0 24px 58px rgba(0,0,0,.34);
+          filter: saturate(1.05);
+        }
+        #${S.uiId} .g88x-part4-card::before{
+          content:'';
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background:
+            radial-gradient(circle at 18% 12%, rgba(255,215,106,.18), transparent 22%),
+            radial-gradient(circle at 92% 0%, rgba(76,231,255,.14), transparent 18%),
+            radial-gradient(circle at 50% 100%, rgba(197,140,255,.12), transparent 24%);
+          opacity:.9;
+        }
+        #${S.uiId} .g88x-part4-top{
+          display:flex;
+          align-items:flex-start;
+          justify-content:space-between;
+          gap:10px;
+          position:relative;
+          z-index:1;
+        }
+        #${S.uiId} .g88x-part4-emoji{
+          width:54px;height:54px;
+          border-radius:18px;
+          display:grid;
+          place-items:center;
+          font-size:26px;
+          background: linear-gradient(180deg, rgba(255,255,255,.15), rgba(255,255,255,.05));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.10), 0 12px 20px rgba(0,0,0,.18);
+        }
+        #${S.uiId} .g88x-part4-title-sm{
+          margin:0;
+          font-size:16px;
+          font-weight:900;
+          text-transform:uppercase;
+          letter-spacing:.05em;
+          color:#fff;
+        }
+        #${S.uiId} .g88x-part4-desc{
+          color: rgba(255,255,255,.62);
+          font-size:12px;
+          margin-top:8px;
+          line-height:1.45;
+        }
+        #${S.uiId} .g88x-part4-tag{
+          display:inline-flex;
+          align-items:center;
+          gap:6px;
+          margin-top:12px;
+          padding:7px 10px;
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(0,0,0,.18);
+          color: rgba(255,255,255,.92);
+          font-size:11px;
+          font-weight:800;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+        }
+        #${S.uiId} .g88x-part4-modal{
+          position:fixed;
+          inset:0;
+          z-index:240;
+          background: rgba(0,0,0,.72);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          display:flex;
+          align-items:center;
+          justify-content:center;
+          padding:20px;
+        }
+        #${S.uiId} .g88x-part4-cardmodal{
+          width:min(1100px, 96vw);
+          border-radius:32px;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 18% 0%, rgba(255,215,106,.10), transparent 18%),
+            radial-gradient(circle at 100% 20%, rgba(76,231,255,.08), transparent 18%),
+            linear-gradient(180deg, rgba(11,12,24,.98), rgba(5,6,14,.98));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: 0 34px 120px rgba(0,0,0,.58);
+        }
+        #${S.uiId} .g88x-part4-headmodal{
+          display:flex;
+          justify-content:space-between;
+          align-items:flex-start;
+          gap:16px;
+          padding:22px 22px 0;
+        }
+        #${S.uiId} .g88x-part4-titlemodal{
+          font-size: clamp(22px, 2.6vw, 30px);
+          font-weight: 900;
+          letter-spacing:.08em;
+          text-transform: uppercase;
+          background: linear-gradient(135deg, #fff 0%, #ffd76a 45%, #fff3c2 100%);
+          -webkit-background-clip:text;
+          -webkit-text-fill-color:transparent;
+        }
+        #${S.uiId} .g88x-part4-submodal{
+          color: rgba(255,255,255,.64);
+          font-size:12px;
+          line-height:1.5;
+          margin-top:6px;
+        }
+        #${S.uiId} .g88x-part4-close{
+          width:42px;height:42px;
+          border-radius:14px;
+          cursor:pointer;
+          display:grid;
+          place-items:center;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(255,255,255,.05);
+          color:#fff;
+          font-size:20px;
+          line-height:1;
+        }
+        #${S.uiId} .g88x-part4-body{
+          padding:18px 22px 22px;
+        }
+        #${S.uiId} .g88x-part4-gridmodal{
+          display:grid;
+          grid-template-columns: 1.05fr .95fr;
+          gap:18px;
+        }
+        @media (max-width: 980px){
+          #${S.uiId} .g88x-part4-gridmodal{ grid-template-columns:1fr; }
+        }
+        #${S.uiId} .g88x-part4-panel{
+          position:relative;
+          border-radius:24px;
+          background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+          overflow:hidden;
+        }
+        #${S.uiId} .g88x-part4-pad{ padding:18px; }
+        #${S.uiId} .g88x-part4-panel::before{
+          content:'';
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background:
+            radial-gradient(circle at 15% 0%, rgba(255,215,106,.12), transparent 20%),
+            radial-gradient(circle at 85% 0%, rgba(76,231,255,.10), transparent 18%);
+        }
+        #${S.uiId} .g88x-part4-row{
+          display:flex;
+          gap:12px;
+          flex-wrap:wrap;
+          align-items:center;
+        }
+        #${S.uiId} .g88x-part4-btn{
+          position:relative;
+          border:none;
+          outline:none;
+          border-radius:16px;
+          padding:11px 16px;
+          font-weight:900;
+          letter-spacing:.06em;
+          text-transform:uppercase;
+          color:#0a0c13;
+          background: linear-gradient(135deg, #fff 0%, #ffd76a 45%, #b8891d 100%);
+          box-shadow: 0 14px 32px rgba(255,215,106,.14), inset 0 1px 0 rgba(255,255,255,.68);
+          cursor:pointer;
+          transition: transform .18s ease, filter .18s ease;
+        }
+        #${S.uiId} .g88x-part4-btn:hover{ transform: translateY(-1px); filter: brightness(1.05); }
+        #${S.uiId} .g88x-part4-btn:active{ transform: translateY(1px); }
+        #${S.uiId} .g88x-part4-btn-ghost{
+          color:#fff;
+          background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+          border:1px solid rgba(255,255,255,.10);
+          box-shadow: 0 10px 26px rgba(0,0,0,.20);
+        }
+        #${S.uiId} .g88x-part4-input,
+        #${S.uiId} .g88x-part4-select{
+          width:100%;
+          border-radius:16px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(255,255,255,.04);
+          color:#fff;
+          outline:none;
+          padding:12px 14px;
+          box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+        }
+        #${S.uiId} .g88x-part4-input::placeholder{ color: rgba(255,255,255,.34); }
+        #${S.uiId} .g88x-part4-input:focus,
+        #${S.uiId} .g88x-part4-select:focus{
+          border-color: rgba(255,215,106,.55);
+          box-shadow: 0 0 0 3px rgba(255,215,106,.10), inset 0 1px 0 rgba(255,255,255,.06);
+        }
+        #${S.uiId} .g88x-part4-divider{
+          height:1px;
+          margin:14px 0;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,.12), transparent);
+        }
+        #${S.uiId} .g88x-part4-stage{
+          position:relative;
+          min-height: 390px;
+          border-radius:24px;
+          overflow:hidden;
+          background:
+            radial-gradient(circle at 50% 20%, rgba(255,215,106,.08), transparent 24%),
+            radial-gradient(circle at 20% 80%, rgba(76,231,255,.08), transparent 20%),
+            linear-gradient(180deg, rgba(8,10,18,.96), rgba(4,5,11,.98));
+          border:1px solid rgba(255,255,255,.08);
+        }
+        #${S.uiId} .g88x-part4-stage::after{
+          content:'';
+          position:absolute;
+          inset:0;
+          background: linear-gradient(120deg, transparent 0 45%, rgba(255,255,255,.05) 50%, transparent 55%);
+          opacity:.42;
+          pointer-events:none;
+        }
+        #${S.uiId} .g88x-part4-chip{
+          display:inline-flex;
+          align-items:center;
+          gap:8px;
+          padding:7px 10px;
+          border-radius:999px;
+          border:1px solid rgba(255,255,255,.10);
+          background: rgba(0,0,0,.18);
+          color:#fff;
+          font-size:11px;
+          font-weight:900;
+          letter-spacing:.08em;
+          text-transform:uppercase;
+        }
+        #${S.uiId} .g88x-part4-statgrid{
+          display:grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap:12px;
+        }
+        @media (max-width: 640px){
+          #${S.uiId} .g88x-part4-statgrid{ grid-template-columns:1fr; }
+        }
+        #${S.uiId} .g88x-part4-stat{
+          padding:14px 16px;
+          border-radius:18px;
+          background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+          border:1px solid rgba(255,255,255,.08);
+        }
+        #${S.uiId} .g88x-part4-stat b{
+          display:block;
+          color:rgba(255,255,255,.58);
+          font-size:11px;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          margin-bottom:6px;
+        }
+        #${S.uiId} .g88x-part4-stat span{
+          font-size:18px;
+          font-weight:900;
+          color:#fff;
+        }
+        #${S.uiId} .g88x-part4-led{
+          border-radius:999px;
+          padding:6px 10px;
+          font-size:11px;
+          font-weight:900;
+          text-transform:uppercase;
+          letter-spacing:.08em;
+          border:1px solid rgba(255,255,255,.12);
+          background: rgba(255,255,255,.04);
+        }
+        #${S.uiId} .g88x-part4-led.red{ color:#ff5e78; }
+        #${S.uiId} .g88x-part4-led.cyan{ color:#4ce7ff; }
+        #${S.uiId} .g88x-part4-led.gold{ color:#ffd76a; }
+        #${S.uiId} .g88x-part4-led.green{ color:#4cffb5; }
+        #${S.uiId} .g88x-part4-led.violet{ color:#c58cff; }
+        #${S.uiId} .g88x-part4-scanline{
+          position:absolute;
+          inset:0;
+          pointer-events:none;
+          background: linear-gradient(180deg, transparent 0 48%, rgba(255,255,255,.08) 50%, transparent 52%);
+          opacity:.2;
+          animation:g88xPart4Scan 5.5s linear infinite;
+        }
+        @keyframes g88xPart4Scan{
+          0%{ transform: translateY(-14%); }
+          100%{ transform: translateY(114%); }
+        }
+        @keyframes g88xPart4Spin{
+          to{ transform: rotate(360deg); }
+        }
+        @keyframes g88xPart4Pop{
+          0%{ transform: scale(.86); opacity:0; }
+          80%{ transform: scale(1.02); opacity:1; }
+          100%{ transform: scale(1); opacity:1; }
+        }
+        @keyframes g88xPart4Shake{
+          0%,100%{ transform: translate(0,0); }
+          25%{ transform: translate(-2px,2px); }
+          50%{ transform: translate(2px,-2px); }
+          75%{ transform: translate(-1px,1px); }
+        }
+      `;
+      document.head.appendChild(style);
+    },
+    money(n) {
+      return Number(n || 0).toLocaleString('vi-VN');
+    },
+    toast(msg, type = 'info') {
+      if (G88X.ui?.toast) return G88X.ui.toast(msg, type, 1800);
+      console.log(type, msg);
+    }
+  };
+
+  const Games = {
+    md5: {
+      seed: '',
+      hash: '',
+      dice: [1,1,1],
+      result: null,
+      roll() {
+        this.seed = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        this.hash = btoa(this.seed).replace(/=/g, '').slice(0, 32).toUpperCase();
+        this.dice = [1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6), 1 + Math.floor(Math.random() * 6)];
+        const sum = this.dice.reduce((a,b)=>a+b, 0);
+        const tai = sum >= 11;
+        this.result = { sum, tai, hash: this.hash };
+        return this.result;
+      }
+    },
+    xocdia: {
+      tokens: [1,1,1,1],
+      bowlOpen: false,
+      result: null,
+      roll() {
+        this.tokens = [0,0,0,0].map(() => Math.floor(Math.random() * 2));
+        const redCount = this.tokens.filter(x => x === 1).length;
+        this.result = { redCount, fourSame: redCount === 0 || redCount === 4 };
+        return this.result;
+      }
+    },
+    baucua: {
+      slots: ['Bau', 'Cua', 'Tom'],
+      result: null,
+      roll() {
+        const list = ['Bau','Cua','Tom','Ca','Ga','Nai'];
+        this.slots = [list[Math.floor(Math.random()*6)], list[Math.floor(Math.random()*6)], list[Math.floor(Math.random()*6)]];
+        this.result = { slots: this.slots.slice() };
+        return this.result;
+      }
+    }
+  };
+
+  const VIEW = {
+    renderShell() {
+      U.cardsHost().innerHTML = `
+        <div class="g88x-part4-wrap">
+          <div class="g88x-part4-head">
+            <div>
+              <div class="g88x-part4-title">Quantum & Myth Expansion</div>
+              <div class="g88x-part4-sub">Tài Xỉu MD5 Quantum · Xóc Đĩa Tứ Linh Premium · Bầu Cua Hoàng Kim</div>
+            </div>
+            <div class="g88x-part4-chip">VIP MODULE</div>
+          </div>
+
+          <div class="g88x-part4-grid">
+            ${VIEW.card('md5', '🛡️', 'Tài Xỉu MD5 Quantum', 'Chuỗi hash minh bạch, giao diện cyberpunk, chuỗi mã chạy như matrix.', 'cyan')}
+            ${VIEW.card('xocdia', '📀', 'Xóc Đĩa Tứ Linh Premium', 'Long – Lân – Quy – Phụng khắc ngọc bích, bát vàng ròng, tứ tử bay quanh màn hình.', 'violet')}
+            ${VIEW.card('baucua', '🦀', 'Bầu Cua Hoàng Kim', 'Linh vật đúc vàng nguyên khối, mở bát phóng to 360° lấp lánh.', 'gold')}
+          </div>
+        </div>
+      `;
+
+      U.cardsHost().querySelectorAll('[data-game]').forEach(el => {
+        el.addEventListener('click', () => VIEW.open(el.getAttribute('data-game')));
+      });
+    },
+    card(id, emoji, title, desc, accent) {
+      return `
+        <article class="g88x-part4-card" data-game="${id}">
+          <div class="g88x-part4-top">
+            <div class="g88x-part4-emoji">${emoji}</div>
+            <div class="g88x-part4-led ${accent}">${accent.toUpperCase()}</div>
+          </div>
+          <div style="position:relative; z-index:1; margin-top:14px;">
+            <h3 class="g88x-part4-title-sm">${title}</h3>
+            <p class="g88x-part4-desc">${desc}</p>
+            <div class="g88x-part4-tag">Mở giao diện</div>
+          </div>
+        </article>
+      `;
+    },
+    open(id) {
+      S.active = id;
+      VIEW.mountModal();
+      if (G88X.audio?.click) G88X.audio.click();
+      if (G88X.fx?.flash) G88X.fx.flash('rgba(255,215,106,.08)', 180);
+    },
+    close() {
+      S.active = null;
+      U.modalHost().innerHTML = '';
+    },
+    mountModal() {
+      const id = S.active;
+      if (!id) return VIEW.close();
+
+      if (id === 'md5' && !Games.md5.result) Games.md5.roll();
+      if (id === 'xocdia' && !Games.xocdia.result) Games.xocdia.roll();
+      if (id === 'baucua' && !Games.baucua.result) Games.baucua.roll();
+
+      const htmlMap = {
+        md5: VIEW.modalMD5(),
+        xocdia: VIEW.modalXocDia(),
+        baucua: VIEW.modalBauCua()
+      };
+
+      U.modalHost().innerHTML = htmlMap[id] || '';
+      const host = U.modalHost();
+
+      host.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', VIEW.close));
+      host.querySelectorAll('[data-action]').forEach(btn => {
+        btn.addEventListener('click', () => VIEW.action(id, btn.getAttribute('data-action')));
+      });
+      host.querySelector('[data-roll]')?.addEventListener('click', () => VIEW.action(id, 'roll'));
+      host.querySelector('[data-open]')?.addEventListener('click', () => VIEW.action(id, 'open'));
+    },
+    modalMD5() {
+      const g = Games.md5;
+      return `
+        <div class="g88x-part4-modal" data-close>
+          <div class="g88x-part4-cardmodal" onclick="event.stopPropagation()">
+            <div class="g88x-part4-headmodal">
+              <div>
+                <div class="g88x-part4-chip">Cyber MD5</div>
+                <div class="g88x-part4-titlemodal">Tài Xỉu MD5 Quantum</div>
+                <div class="g88x-part4-submodal">Chuỗi hash chạy lướt, laser đỏ chốt kết quả, giao diện Matrix cyberpunk.</div>
+              </div>
+              <button class="g88x-part4-close" data-close>×</button>
+            </div>
+            <div class="g88x-part4-body">
+              <div class="g88x-part4-gridmodal">
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-stage">
+                    <div class="g88x-part4-scanline"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-part4-row">
+                        <span class="g88x-part4-chip">Hash ${g.hash}</span>
+                        <span class="g88x-part4-chip">Sum ${g.result?.sum ?? 0}</span>
+                        <span class="g88x-part4-chip">${g.result?.tai ? 'TÀI' : 'XỈU'}</span>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:grid; gap:10px; font-family:monospace; color:#8df9ff; opacity:.88; line-height:1.5;">
+                        <div>0110 1011 1110 0011 0101 1001 0001 1110</div>
+                        <div>0011 1101 1001 0110 1010 0011 1111 0001</div>
+                        <div>MD5::QUANTUM::PROTOCOL::VERIFIED</div>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:flex; align-items:center; justify-content:center; gap:16px; min-height:180px;">
+                        ${U.die(g.dice[0])}
+                        ${U.die(g.dice[1])}
+                        ${U.die(g.dice[2])}
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div class="g88x-part4-row">
+                        <button class="g88x-part4-btn" data-roll>Lắc lại</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-action="settle">Chốt kết quả</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-statgrid">
+                    <div class="g88x-part4-stat"><b>Dice</b><span>${g.dice.join(' · ')}</span></div>
+                    <div class="g88x-part4-stat"><b>Mode</b><span>${g.result?.tai ? 'Tài' : 'Xỉu'}</span></div>
+                    <div class="g88x-part4-stat"><b>State</b><span>Quantum</span></div>
+                  </div>
+                  <div class="g88x-part4-divider"></div>
+                  <div class="g88x-part4-panel g88x-part4-pad">
+                    <div class="g88x-part4-submodal">Hiệu ứng chủ đạo: màn hình viễn tưởng, hash code lướt nền, laser đỏ chốt kết quả từng mili-giây.</div>
+                    <div class="g88x-part4-divider"></div>
+                    <div class="g88x-part4-row">
+                      <span class="g88x-part4-led cyan">Matrix scan</span>
+                      <span class="g88x-part4-led gold">Laser lock</span>
+                      <span class="g88x-part4-led green">Transparent fair</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalXocDia() {
+      const g = Games.xocdia;
+      const redCount = g.tokens.filter(x => x === 1).length;
+      return `
+        <div class="g88x-part4-modal" data-close>
+          <div class="g88x-part4-cardmodal" onclick="event.stopPropagation()">
+            <div class="g88x-part4-headmodal">
+              <div>
+                <div class="g88x-part4-chip">Mythic Bowl</div>
+                <div class="g88x-part4-titlemodal">Xóc Đĩa Tứ Linh Premium</div>
+                <div class="g88x-part4-submodal">Long – Lân – Quy – Phụng khắc ngọc bích, bát vàng ròng, tứ tử bay quanh màn hình.</div>
+              </div>
+              <button class="g88x-part4-close" data-close>×</button>
+            </div>
+            <div class="g88x-part4-body">
+              <div class="g88x-part4-gridmodal">
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-stage">
+                    <div class="g88x-part4-scanline"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-part4-row">
+                        <span class="g88x-part4-chip">Red ${redCount}</span>
+                        <span class="g88x-part4-chip">Open ${g.bowlOpen ? 'YES' : 'NO'}</span>
+                        <span class="g88x-part4-chip">${g.result?.fourSame ? 'TỨ TỬ' : 'NORMAL'}</span>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:grid; place-items:center; min-height:200px;">
+                        <div style="
+                          width:220px;height:220px;border-radius:50%;
+                          background:
+                            radial-gradient(circle at 35% 30%, rgba(255,215,106,.24), transparent 28%),
+                            radial-gradient(circle at 50% 50%, rgba(255,255,255,.10), rgba(255,255,255,.03) 52%, rgba(0,0,0,.28) 75%);
+                          border:10px solid rgba(255,215,106,.52);
+                          box-shadow: 0 0 0 1px rgba(255,255,255,.08), inset 0 0 30px rgba(0,0,0,.22), 0 20px 50px rgba(0,0,0,.34);
+                          position:relative;
+                        ">
+                          <div style="position:absolute; inset:18px; border-radius:50%; display:grid; place-items:center;">
+                            <div style="display:flex; gap:12px; flex-wrap:wrap; align-items:center; justify-content:center;">
+                              ${g.tokens.map((t,i)=>`
+                                <div style="
+                                  width:44px;height:44px;border-radius:14px;
+                                  display:grid;place-items:center;
+                                  background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+                                  border:1px solid rgba(255,255,255,.10);
+                                  box-shadow: inset 0 1px 0 rgba(255,255,255,.05), 0 10px 18px rgba(0,0,0,.22);
+                                  font-weight:900;color:#fff;
+                                  transform: rotate(${i*10-15}deg);
+                                ">${t ? 'ĐỎ' : 'TRẮNG'}</div>
+                              `).join('')}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div class="g88x-part4-row">
+                        <button class="g88x-part4-btn" data-roll>Khui bát</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-open>Mở bát</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-action="settle">Chốt cửa</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-statgrid">
+                    <div class="g88x-part4-stat"><b>Token</b><span>${g.tokens.join(' · ')}</span></div>
+                    <div class="g88x-part4-stat"><b>Red</b><span>${redCount}</span></div>
+                    <div class="g88x-part4-stat"><b>Type</b><span>${g.result?.fourSame ? 'Tứ tử' : 'Bình thường'}</span></div>
+                  </div>
+                  <div class="g88x-part4-divider"></div>
+                  <div class="g88x-part4-panel g88x-part4-pad">
+                    <div class="g88x-part4-submodal">Khi ra tứ tử, linh vật tương ứng có thể được mô phỏng bay quanh màn hình ở part sau.</div>
+                    <div class="g88x-part4-divider"></div>
+                    <div class="g88x-part4-row">
+                      <span class="g88x-part4-led violet">Mythic bowl</span>
+                      <span class="g88x-part4-led gold">Gold bowl</span>
+                      <span class="g88x-part4-led red">Red/White</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    modalBauCua() {
+      const g = Games.baucua;
+      return `
+        <div class="g88x-part4-modal" data-close>
+          <div class="g88x-part4-cardmodal" onclick="event.stopPropagation()">
+            <div class="g88x-part4-headmodal">
+              <div>
+                <div class="g88x-part4-chip">Golden Animals</div>
+                <div class="g88x-part4-titlemodal">Bầu Cua Hoàng Kim</div>
+                <div class="g88x-part4-submodal">Linh vật đúc vàng nguyên khối, mở bát phóng to 360° lấp lánh phản quang.</div>
+              </div>
+              <button class="g88x-part4-close" data-close>×</button>
+            </div>
+            <div class="g88x-part4-body">
+              <div class="g88x-part4-gridmodal">
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-stage">
+                    <div class="g88x-part4-scanline"></div>
+                    <div class="p-4" style="position:relative; z-index:1;">
+                      <div class="g88x-part4-row">
+                        <span class="g88x-part4-chip">Slots ${g.slots.join(' · ')}</span>
+                        <span class="g88x-part4-chip">Gold mode</span>
+                        <span class="g88x-part4-chip">Reveal</span>
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div style="display:grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap:12px; min-height:200px;">
+                        ${g.slots.map((s,i)=>`
+                          <div style="
+                            border-radius:20px;
+                            background:
+                              radial-gradient(circle at 30% 20%, rgba(255,215,106,.24), transparent 24%),
+                              linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+                            border:1px solid rgba(255,255,255,.10);
+                            box-shadow: 0 16px 28px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.05);
+                            display:grid; place-items:center;
+                            min-height:160px;
+                            transform: perspective(900px) rotateY(${i*6-6}deg) rotateX(2deg);
+                          ">
+                            <div style="text-align:center;">
+                              <div style="font-size:44px; font-weight:900; color:#fff;">${VIEW.iconFor(g.slots[i])}</div>
+                              <div style="margin-top:8px; font-size:12px; font-weight:900; letter-spacing:.08em; color:#ffd76a; text-transform:uppercase;">${s}</div>
+                            </div>
+                          </div>
+                        `).join('')}
+                      </div>
+                      <div class="g88x-part4-divider"></div>
+                      <div class="g88x-part4-row">
+                        <button class="g88x-part4-btn" data-roll>Xóc lại</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-open>Mở bát</button>
+                        <button class="g88x-part4-btn g88x-part4-btn-ghost" data-action="settle">Chốt kết quả</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="g88x-part4-panel g88x-part4-pad">
+                  <div class="g88x-part4-statgrid">
+                    <div class="g88x-part4-stat"><b>Top</b><span>${g.slots[0]}</span></div>
+                    <div class="g88x-part4-stat"><b>Mid</b><span>${g.slots[1]}</span></div>
+                    <div class="g88x-part4-stat"><b>Bot</b><span>${g.slots[2]}</span></div>
+                  </div>
+                  <div class="g88x-part4-divider"></div>
+                  <div class="g88x-part4-panel g88x-part4-pad">
+                    <div class="g88x-part4-submodal">Khi trúng, linh vật đó sẽ được phóng to giữa màn hình và xoay 360° lấp lánh.</div>
+                    <div class="g88x-part4-divider"></div>
+                    <div class="g88x-part4-row">
+                      <span class="g88x-part4-led gold">Golden animal</span>
+                      <span class="g88x-part4-led cyan">Reflective</span>
+                      <span class="g88x-part4-led green">Royal reveal</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>`;
+    },
+    action(id, act) {
+      if (id === 'md5') {
+        if (act === 'roll') {
+          Games.md5.roll();
+          if (G88X.audio?.spin) G88X.audio.spin();
+          if (G88X.fx?.flash) G88X.fx.flash('rgba(76,231,255,.10)', 220);
+          U.modalHost().innerHTML = VIEW.modalMD5();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          const r = Games.md5.result || Games.md5.roll();
+          if (G88X.ui?.toast) G88X.ui.toast(`MD5 Quantum: ${r.tai ? 'TÀI' : 'XỈU'} · ${r.sum}`, r.tai ? 'success' : 'info', 1800);
+          U.modalHost().innerHTML = VIEW.modalMD5();
+          VIEW.mountModal();
+        }
+      }
+
+      if (id === 'xocdia') {
+        if (act === 'roll' || act === 'open') {
+          Games.xocdia.roll();
+          Games.xocdia.bowlOpen = true;
+          if (G88X.audio?.spin) G88X.audio.spin();
+          if (G88X.fx?.burst) G88X.fx.burst(innerWidth * .5, innerHeight * .48, '#ffd76a', 24);
+          U.modalHost().innerHTML = VIEW.modalXocDia();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          const r = Games.xocdia.result || Games.xocdia.roll();
+          if (G88X.ui?.toast) G88X.ui.toast(r.fourSame ? 'Tứ tử!' : `Đỏ: ${r.redCount}/4`, r.fourSame ? 'success' : 'info', 1800);
+          U.modalHost().innerHTML = VIEW.modalXocDia();
+          VIEW.mountModal();
+        }
+      }
+
+      if (id === 'baucua') {
+        if (act === 'roll' || act === 'open') {
+          Games.baucua.roll();
+          if (G88X.audio?.spin) G88X.audio.spin();
+          if (G88X.fx?.flash) G88X.fx.flash('rgba(255,215,106,.10)', 220);
+          U.modalHost().innerHTML = VIEW.modalBauCua();
+          VIEW.mountModal();
+        }
+        if (act === 'settle') {
+          if (G88X.ui?.toast) G88X.ui.toast(`Bầu Cua: ${Games.baucua.slots.join(' · ')}`, 'success', 1800);
+          U.modalHost().innerHTML = VIEW.modalBauCua();
+          VIEW.mountModal();
+        }
+      }
+    }
+  };
+
+  U.die = function(value) {
+    const map = {
+      1: [[50,50]],
+      2: [[25,25],[75,75]],
+      3: [[25,25],[50,50],[75,75]],
+      4: [[25,25],[75,25],[25,75],[75,75]],
+      5: [[25,25],[75,25],[50,50],[25,75],[75,75]],
+      6: [[25,20],[75,20],[25,50],[75,50],[25,80],[75,80]]
+    };
+    return `
+      <div class="g88x-dice" style="width:58px;height:58px;border-radius:16px; background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(240,240,255,.92)); border:1px solid rgba(0,0,0,.12); box-shadow: 0 14px 26px rgba(0,0,0,.26), inset 0 1px 0 rgba(255,255,255,.76); position:relative;">
+        ${(map[value] || map[1]).map(([x,y]) => `<span class="g88x-pip" style="position:absolute; width:9px; height:9px; border-radius:50%; background:#121212; left:${x}%; top:${y}%; transform:translate(-50%,-50%);"></span>`).join('')}
+      </div>
+    `;
+  };
+
+  VIEW.iconFor = function(name) {
+    const table = {
+      Bau: '🪷',
+      Cua: '🦀',
+      Tom: '🦐',
+      Ca: '🐟',
+      Ga: '🐓',
+      Nai: '🦌'
+    };
+    return table[name] || '✨';
+  };
+
+  U.boot = () => {
+    U.style();
+    U.host();
+    VIEW.renderShell();
+    if (G88X.ui?.toast) G88X.ui.toast('Part 4 loaded', 'info', 1200);
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', U.boot, { once: true });
+  } else {
+    U.boot();
+  }
+
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') VIEW.close();
+  }, { passive: true });
+})();
+</script>
 </body>
 </html>
